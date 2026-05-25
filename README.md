@@ -1,2 +1,0 @@
-# Mobio
-Created with CodeSandbox

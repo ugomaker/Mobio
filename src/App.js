@@ -89,7 +89,7 @@ var ENHAX_LOGO = "https://placehold.co/120x40/0d1629/white?text=ENHAX";
 
 // ── Mapbox Token (module level) ───────────────────────────────────────────
 // 👉 Remplace par ton token sur https://mapbox.com
-var MAPBOX_TOKEN = "COLLE_TON_TOKEN_ICI";
+var MAPBOX_TOKEN = "pk.eyJ1IjoiZ290aGFtOTIxIiwiYSI6ImNtcGw4a3JrZzBodHkydHI4dDdzam5nd2UifQ.WIqemPOpVulk335bjShAtQ";
 
 // ── Notifications ──────────────────────────────────────────────────────────
 var NOTIF_TEMPLATES = [

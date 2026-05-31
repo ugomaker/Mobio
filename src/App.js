@@ -987,7 +987,7 @@ function MapView(props) {
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>{(props.fromAddr || {label:'Gare du Nord'}).label}</span>
           <span style={{ flex: 1, borderBottom: "1.5px dashed " + T.border, margin: "0 4px" }} />
           <span style={{ width: 8, height: 8, background: T.accent, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
-          <span style={{ color: T.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>{(props.toAddr   || {label:'Tour Eiffel'}).label}</span>
+          <span style={{ color: T.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>{props.toAddr ? props.toAddr.label : 'Où allez-vous ?'}</span>
         </div>
       </div>
 

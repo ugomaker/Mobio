@@ -89,7 +89,8 @@ var ENHAX_LOGO = "https://placehold.co/120x40/0d1629/white?text=ENHAX";
 
 // ── Mapbox Token (module level) ───────────────────────────────────────────
 // 👉 Remplace par ton token sur https://mapbox.com
-var MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN || "";
+var MAPBOX_TOKEN = "COLLE_TON_TOKEN_ICI";
+
 // ── Notifications ──────────────────────────────────────────────────────────
 var NOTIF_TEMPLATES = [
   { id: 1, type: "prix dynamiques",   icon: "⚡", title: "Prix dynamiques détectés",         body: "Certaines plateformes ont augmenté leurs prix. Comparez avant de partir.",  time: "À l'instant", read: false },

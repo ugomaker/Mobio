@@ -22,10 +22,15 @@ const PLATFORMS = {
   marcel: { name: "Marcel", short: "Ma", color: "#1a1a2e", tc: "#fff", base: 2.0, pKm: 1.45, pMin: 0.28, stars: 4.9, categories: [{label:"Marcel Berline", seats:4},{label:"Marcel Van", seats:7}] },
 };
 const SCOOTERS = {
-  lime:  { name: "Lime",   short: "Lm", color: "#00c853", tc: "#fff", unlock: 1.0, pMin: 0.25, type: "Trottinette",    bat: 78   },
-  tier:  { name: "Tier",   short: "Tr", color: "#1B5EF7", tc: "#fff", unlock: 1.0, pMin: 0.28, type: "Trottinette",    bat: 55   },
-  dott:  { name: "Dott",   short: "Dt", color: "#ff4a17", tc: "#fff", unlock: 1.0, pMin: 0.20, type: "Vélo électrique", bat: 91  },
-  velib: { name: "Vélib'", short: "Vb", color: "#0072b9", tc: "#fff", unlock: 0,   pMin: 0.20, type: "Vélo électrique", bat: null },
+  lime_sc:  { name: "Lime",   short: "Lm", color: "#00c853", tc: "#fff", unlock: 1.0, pMin: 0.25, type: "scooter", label: "Trottinette",     bat: 78  },
+  lime_bk:  { name: "Lime",   short: "Lm", color: "#00c853", tc: "#fff", unlock: 1.0, pMin: 0.20, type: "bike",    label: "Vélo électrique", bat: 65  },
+  tier_sc:  { name: "Tier",   short: "Tr", color: "#1B5EF7", tc: "#fff", unlock: 1.0, pMin: 0.28, type: "scooter", label: "Trottinette",     bat: 55  },
+  tier_bk:  { name: "Tier",   short: "Tr", color: "#1B5EF7", tc: "#fff", unlock: 1.0, pMin: 0.22, type: "bike",    label: "Vélo électrique", bat: 70  },
+  dott:     { name: "Dott",   short: "Dt", color: "#ff4a17", tc: "#fff", unlock: 1.0, pMin: 0.20, type: "scooter", label: "Trottinette",     bat: 91  },
+  bird:     { name: "Bird",   short: "Bd", color: "#111111", tc: "#fff", unlock: 1.0, pMin: 0.26, type: "scooter", label: "Trottinette",     bat: 60  },
+  voi:      { name: "Voi",    short: "Vo", color: "#ff3366", tc: "#fff", unlock: 1.0, pMin: 0.23, type: "scooter", label: "Trottinette",     bat: 72  },
+  pony:     { name: "Pony",   short: "Pn", color: "#f5a623", tc: "#fff", unlock: 1.0, pMin: 0.18, type: "bike",    label: "Vélo électrique", bat: 80  },
+  velib:    { name: "Vélib'", short: "Vb", color: "#0072b9", tc: "#fff", unlock: 0,   pMin: 0.17, type: "station", label: "Vélo station",    bat: null },
 };
 const HISTORY_DATA = [
   { id: 1, plId: "bolt",   from: "Gare du Nord", to: "Tour Eiffel",  price: 8.20,  dur: 14, date: "Aujourd'hui", saved: 3.20, eco: true  },
@@ -677,6 +682,63 @@ function useJCDecaux(lat, lng) {
   return { stations: stations, loading: loading, cityName: cityName };
 }
 
+
+// ── GBFS Micro-mobilité temps réel ────────────────────────────────────────
+var GBFS_FEEDS = {
+  lime:  "https://data.lime.bike/api/partners/v2/gbfs/paris/free_bike_status.json",
+  tier:  "https://platform.tier-services.io/v2/gbfs/paris/free_bike_status.json",
+  dott:  "https://gbfs.api.ridedott.com/public/v2/paris/free_bike_status.json",
+  bird:  "https://gbfs.bird.co/paris/free_bike_status.json",
+  voi:   "https://api.voiapp.io/gbfs/v2/paris/free_bike_status.json",
+};
+
+function useGBFS(lat, lng) {
+  var [vehicles, setVehicles] = useState({});
+  var [loading,  setLoading]  = useState(false);
+
+  useEffect(function() {
+    if (!lat || !lng) return;
+    setLoading(true);
+
+    var results = {};
+    var pending = Object.keys(GBFS_FEEDS).length;
+
+    Object.keys(GBFS_FEEDS).forEach(function(operator) {
+      fetch(GBFS_FEEDS[operator])
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.data || !data.data.bikes) return;
+          // Filtrer les véhicules à moins de 500m
+          var nearby = data.data.bikes.filter(function(b) {
+            if (!b.lat || !b.lon) return false;
+            var dist = haversine(lat, lng, b.lat, b.lon) * 1000;
+            return dist < 500;
+          }).map(function(b) {
+            return {
+              id:       b.bike_id,
+              dist:     Math.round(haversine(lat, lng, b.lat, b.lon) * 1000),
+              bat:      b.current_range_meters ? Math.round(b.current_range_meters / 200) : null,
+              type:     b.vehicle_type_id && b.vehicle_type_id.includes("bike") ? "bike" : "scooter",
+              isEbike:  b.is_disabled === false && b.vehicle_type_id && b.vehicle_type_id.includes("ebike"),
+            };
+          }).sort(function(a, b) { return a.dist - b.dist; }).slice(0, 3);
+
+          if (nearby.length > 0) results[operator] = nearby;
+        })
+        .catch(function() {})
+        .finally(function() {
+          pending--;
+          if (pending === 0) {
+            setVehicles(results);
+            setLoading(false);
+          }
+        });
+    });
+  }, [lat, lng]);
+
+  return { vehicles: vehicles, loading: loading };
+}
+
 // ── Compare ────────────────────────────────────────────────────────────────
 function Compare(props) {
   var T = props.T;
@@ -687,11 +749,13 @@ function Compare(props) {
   var setTo   = props.setToAddr;
   var geoLoading = props.geoLoading;
   var [tab,   setTab]   = useState("vtc");
+  var [microFilter, setMicroFilter] = useState("all");
   var [sort,  setSort]  = useState("price_asc");
   var [flash, setFlash] = useState(false);
   var [passengers, setPassengers] = useState(1);
   var velib = useVelib(from.lat, from.lng);
   var jcdecaux = useJCDecaux(from.lat, from.lng);
+  var gbfs = useGBFS(from.lat, from.lng);
 
   var km   = to ? Math.max(0.5, haversine(from.lat, from.lng, to.lat, to.lng) * 1.35) : 5.2;
   var mins = Math.round(km / 0.38);
@@ -729,7 +793,7 @@ function Compare(props) {
   // Scooters fictifs (Lime, Tier, Dott) + Vélib' temps réel
   var scList = Object.keys(SCOOTERS).filter(function(id) { return id !== "velib"; }).map(function(id, i) {
     var s = SCOOTERS[id];
-    return { id: id, name: s.name, short: s.short, color: s.color, tc: s.tc, type: s.type, bat: s.bat, unlock: s.unlock, pMin: s.pMin, price: calcScPrice(id, scMins), dist: [85, 140, 210][i], real: false };
+    return { id: id, name: s.name + " — " + s.label, short: s.short, color: s.color, tc: s.tc, type: s.type, bat: s.bat, unlock: s.unlock, pMin: s.pMin, price: calcScPrice(id, scMins), dist: [85, 110, 140, 180, 220, 260, 300, 340][i] || 200, real: false };
   }).concat(
     velib.stations.slice(0, 2).map(function(st) {
       var walkMins = Math.round(st.dist / 80); // ~80m/min à pied
@@ -854,7 +918,7 @@ function Compare(props) {
         </div>
 
         <div style={{ display: "flex", borderBottom: "1px solid " + T.border, marginLeft: -16, marginRight: -16, paddingLeft: 16 }}>
-          {[["vtc", "Véhicules"], ["micro", "Trottinettes"]].map(function(item) {
+          {[["vtc", "Véhicules"], ["micro", "Micro-mobilité"]].map(function(item) {
             return (
               <button
                 key={item[0]}
@@ -928,13 +992,20 @@ function Compare(props) {
           </div>
         ) : (
           <div>
-            {velib.loading && (
+            <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+              {[["all","Tout"],["scooter","Trottinettes"],["bike","Vélos"],["station","Stations"]].map(function(f) {
+                return (
+                  <button key={f[0]} onClick={function() { setMicroFilter(f[0]); }} style={{ padding: "5px 11px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: microFilter === f[0] ? T.accent : T.input, color: microFilter === f[0] ? "#fff" : T.sub }}>{f[1]}</button>
+                );
+              })}
+            </div>
+            {(velib.loading || gbfs.loading) && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: T.input, borderRadius: 12, marginBottom: 10, fontSize: 12, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#0072b9", animation: "pulse 1s infinite" }} />
-                Chargement des données Vélib' en temps réel…
+                Chargement des données temps réel…
               </div>
             )}
-            {scList.map(function(s) {
+            {scList.filter(function(s) { return microFilter === "all" || (s.real ? (microFilter === "station" ? s.type === "station" : microFilter === "bike" ? s.type === "bike" : microFilter === "scooter" ? s.type === "scooter" : true) : (SCOOTERS[s.id] ? (microFilter === "scooter" ? SCOOTERS[s.id].type === "scooter" : microFilter === "bike" ? SCOOTERS[s.id].type === "bike" : true) : true)); }).map(function(s) {
               return (
                 <div key={s.id} style={{ background: T.card, border: s.real ? "1.5px solid #0072b9" : "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10, position: "relative" }}>
                   {s.real && <div style={{ position: "absolute", top: -9, right: 12, background: "#0072b9", color: "#fff", fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 5, fontFamily: "'DM Sans',sans-serif" }}>Temps réel</div>}

@@ -23,18 +23,18 @@ const PLATFORMS = {
 };
 const SCOOTERS = {
   lime_sc:  { name: "Lime",   short: "Lm", color: "#00c853", tc: "#fff", unlock: 1.0, pMin: 0.25, type: "scooter", label: "Trottinette",     bat: 78  },
-  lime_bk:  { name: "Lime",   short: "Lm", color: "#00c853", tc: "#fff", unlock: 1.0, pMin: 0.20, type: "bike",    label: "Vélo électrique", bat: 65  },
+  lime_bk:  { name: "Lime",   short: "Lm", color: "#00c853", tc: "#fff", unlock: 1.0, pMin: 0.20, type: "bike",    label: "Vélo libre", bat: 65  },
   tier_sc:  { name: "Tier",   short: "Tr", color: "#1B5EF7", tc: "#fff", unlock: 1.0, pMin: 0.28, type: "scooter", label: "Trottinette",     bat: 55  },
-  tier_bk:  { name: "Tier",   short: "Tr", color: "#1B5EF7", tc: "#fff", unlock: 1.0, pMin: 0.22, type: "bike",    label: "Vélo électrique", bat: 70  },
+  tier_bk:  { name: "Tier",   short: "Tr", color: "#1B5EF7", tc: "#fff", unlock: 1.0, pMin: 0.22, type: "bike",    label: "Vélo libre", bat: 70  },
   dott:     { name: "Dott",   short: "Dt", color: "#ff4a17", tc: "#fff", unlock: 1.0, pMin: 0.20, type: "scooter", label: "Trottinette",     bat: 91  },
   bird:     { name: "Bird",   short: "Bd", color: "#111111", tc: "#fff", unlock: 1.0, pMin: 0.26, type: "scooter", label: "Trottinette",     bat: 60  },
   voi:      { name: "Voi",    short: "Vo", color: "#ff3366", tc: "#fff", unlock: 1.0, pMin: 0.23, type: "scooter", label: "Trottinette",     bat: 72  },
-  pony:     { name: "Pony",   short: "Pn", color: "#f5a623", tc: "#fff", unlock: 1.0, pMin: 0.18, type: "bike",    label: "Vélo électrique", bat: 80  },
-  velib:    { name: "Vélib'", short: "Vb", color: "#0072b9", tc: "#fff", unlock: 0,   pMin: 0.17, type: "station", label: "Vélo station",    bat: null },
+  pony:     { name: "Pony",   short: "Pn", color: "#f5a623", tc: "#fff", unlock: 1.0, pMin: 0.18, type: "bike",    label: "Vélo libre", bat: 80  },
+  velib:    { name: "Vélib'", short: "Vb", color: "#0072b9", tc: "#fff", unlock: 0,   pMin: 0.17, type: "station", label: "Vélo en station", bat: null },
 };
 const HISTORY_DATA = [
   { id: 1, plId: "bolt",   from: "Gare du Nord", to: "Tour Eiffel",  price: 8.20,  dur: 14, date: "Aujourd'hui", saved: 3.20, eco: true  },
-  { id: 2, plId: "lime",   from: "République",   to: "Bastille",     price: 5.40,  dur: 18, date: "Hier",        saved: null, eco: true, sc: true },
+  { id: 2, plId: "lime_sc",   from: "République",   to: "Bastille",     price: 5.40,  dur: 18, date: "Hier",        saved: null, eco: true, sc: true },
   { id: 3, plId: "heetch", from: "Châtelet",     to: "Montmartre",   price: 12.80, dur: 22, date: "Hier",        saved: null, eco: false },
   { id: 4, plId: "uber",   from: "Opéra",        to: "Saint-Lazare", price: 7.60,  dur: 9,  date: "Lundi",       saved: null, eco: false },
 ];
@@ -993,7 +993,7 @@ function Compare(props) {
         ) : (
           <div>
             <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-              {[["all","Tout"],["scooter","Trottinettes"],["bike","Vélos"],["station","Stations"]].map(function(f) {
+              {[["all","Tout"],["scooter","Trottinettes"],["bike","Vélos libres"],["station","Vélos en station"]].map(function(f) {
                 return (
                   <button key={f[0]} onClick={function() { setMicroFilter(f[0]); }} style={{ padding: "5px 11px", borderRadius: 20, fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", background: microFilter === f[0] ? T.accent : T.input, color: microFilter === f[0] ? "#fff" : T.sub }}>{f[1]}</button>
                 );
@@ -1005,7 +1005,7 @@ function Compare(props) {
                 Chargement des données temps réel…
               </div>
             )}
-            {scList.filter(function(s) { return microFilter === "all" || (s.real ? (microFilter === "station" ? s.type === "station" : microFilter === "bike" ? s.type === "bike" : microFilter === "scooter" ? s.type === "scooter" : true) : (SCOOTERS[s.id] ? (microFilter === "scooter" ? SCOOTERS[s.id].type === "scooter" : microFilter === "bike" ? SCOOTERS[s.id].type === "bike" : true) : true)); }).map(function(s) {
+            {scList.filter(function(s) { if (microFilter === "all") return true; var type = s.real ? s.type : (SCOOTERS[s.id] ? SCOOTERS[s.id].type : null); return type === microFilter; }).map(function(s) {
               return (
                 <div key={s.id} style={{ background: T.card, border: s.real ? "1.5px solid #0072b9" : "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10, position: "relative" }}>
                   {s.real && <div style={{ position: "absolute", top: -9, right: 12, background: "#0072b9", color: "#fff", fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 5, fontFamily: "'DM Sans',sans-serif" }}>Temps réel</div>}
@@ -1067,13 +1067,18 @@ function MapView(props) {
 
   // Offsets fixes pour simuler des véhicules autour du départ (en degrés)
   var VEHICLE_OFFSETS = [
-    { id: "uber",   kind: "vtc",     dlat:  0.008, dlng:  0.010 },
-    { id: "bolt",   kind: "vtc",     dlat:  0.012, dlng: -0.008 },
-    { id: "heetch", kind: "vtc",     dlat: -0.006, dlng:  0.014 },
-    { id: "marcel", kind: "vtc",     dlat:  0.015, dlng:  0.005 },
-    { id: "lime",   kind: "scooter", dlat: -0.003, dlng: -0.005, dist: "85m"  },
-    { id: "tier",   kind: "scooter", dlat:  0.005, dlng: -0.012, dist: "140m" },
-    { id: "dott",   kind: "bike",    dlat: -0.008, dlng:  0.008, dist: "210m" },
+    { id: "uber",    kind: "vtc",     dlat:  0.008, dlng:  0.010 },
+    { id: "bolt",    kind: "vtc",     dlat:  0.012, dlng: -0.008 },
+    { id: "heetch",  kind: "vtc",     dlat: -0.006, dlng:  0.014 },
+    { id: "marcel",  kind: "vtc",     dlat:  0.015, dlng:  0.005 },
+    { id: "lime_sc", kind: "scooter", dlat: -0.003, dlng: -0.005, dist: "85m"  },
+    { id: "tier_sc", kind: "scooter", dlat:  0.005, dlng: -0.012, dist: "140m" },
+    { id: "dott",    kind: "scooter", dlat: -0.005, dlng:  0.003, dist: "180m" },
+    { id: "bird",    kind: "scooter", dlat:  0.009, dlng: -0.015, dist: "220m" },
+    { id: "voi",     kind: "scooter", dlat: -0.010, dlng: -0.008, dist: "260m" },
+    { id: "lime_bk", kind: "bike",    dlat: -0.008, dlng:  0.008, dist: "120m" },
+    { id: "tier_bk", kind: "bike",    dlat:  0.007, dlng:  0.011, dist: "160m" },
+    { id: "pony",    kind: "bike",    dlat: -0.012, dlng:  0.006, dist: "200m" },
   ];
 
   function addMarkers(map, currentFilter) {
@@ -1086,9 +1091,10 @@ function MapView(props) {
     var baseLng = props.fromAddr ? props.fromAddr.lng : 2.3553;
 
     VEHICLE_OFFSETS
-      .filter(function(v) { return currentFilter === "tous" || v.kind === currentFilter; })
+      .filter(function(v) { return currentFilter === "tous" || v.kind === currentFilter || (currentFilter === "station" && v.kind === "station"); })
       .forEach(function(v) {
         var p = PLATFORMS[v.id] || SCOOTERS[v.id];
+        if (!p) return; // skip if not found
         var isVtc = v.kind === "vtc";
         var label = isVtc ? (p.name + " · " + calcVtcPrice(v.id, km, 14).toFixed(2) + " €") : (v.kind === "scooter" ? ("🛴 " + p.name) : ("🚲 " + p.name));
 
@@ -1231,7 +1237,7 @@ function MapView(props) {
   var selVtc = selected && PLATFORMS[selected] ? { id: selected, ...PLATFORMS[selected], price: calcVtcPrice(selected, km, 14), eta: [3,4,6,8][Object.keys(PLATFORMS).indexOf(selected)] } : null;
   var selSc  = selected && SCOOTERS[selected]  ? { id: selected, ...SCOOTERS[selected] } : null;
 
-  var filters = [["tous","Tous"],["vtc","Véhicules"],["scooter","Trottinettes"],["bike","Vélos"]];
+  var filters = [["tous","Tous"],["vtc","Véhicules"],["scooter","Trottinettes"],["bike","Vélos libres"],["station","Vélos en station"]];
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -1347,13 +1353,14 @@ function MapView(props) {
               </div>
             );
           })}
-          {Object.keys(SCOOTERS).filter(function() { return filter === "tous" || filter === "scooter" || filter === "bike"; }).map(function(id) {
+          {Object.keys(SCOOTERS).filter(function(id) { var s = SCOOTERS[id]; return s && (filter === "tous" || filter === s.type); }).map(function(id) {
             var s = SCOOTERS[id];
             return (
               <div key={id} style={{ flexShrink: 0, width: 110, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "10px 11px", cursor: "pointer" }}
                 onClick={function() { setSelected(id); }}>
                 <Logo short={s.short} color={s.color} tc={s.tc} size={28} />
                 <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginTop: 6, fontFamily: "'DM Sans',sans-serif" }}>{s.name}</div>
+                <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.label}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: T.text, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min"}</div>
                 {s.bat && (
                   <div style={{ marginTop: 5 }}>

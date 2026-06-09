@@ -98,7 +98,7 @@ var JCDECAUX_KEY = "eda50bf626d4fb2030eef046f308a30c0ce0fe8c";
 
 // ── Mapbox Token (module level) ───────────────────────────────────────────
 // 👉 Remplace par ton token sur https://mapbox.com
-var MAPBOX_TOKEN = "COLLE_TON_TOKEN_ICI";
+var MAPBOX_TOKEN = "process.env.REACT_APP_MAPBOX_TOKEN || """;
 
 // ── Notifications ──────────────────────────────────────────────────────────
 var NOTIF_TEMPLATES = [

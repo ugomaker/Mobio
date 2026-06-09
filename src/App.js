@@ -87,9 +87,13 @@ const PLACES = [
 // ── Logo Enhax (base64) ───────────────────────────────────────────────────────
 var ENHAX_LOGO = "https://placehold.co/120x40/0d1629/white?text=ENHAX";
 
+// ── JCDecaux API Key ──────────────────────────────────────────────────────────
+// 👉 Clé gratuite sur developer.jcdecaux.com
+var JCDECAUX_KEY = "eda50bf626d4fb2030eef046f308a30c0ce0fe8c";
+
 // ── Mapbox Token (module level) ───────────────────────────────────────────
 // 👉 Remplace par ton token sur https://mapbox.com
-var MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN || "";
+var MAPBOX_TOKEN = "COLLE_TON_TOKEN_ICI";
 
 // ── Notifications ──────────────────────────────────────────────────────────
 var NOTIF_TEMPLATES = [
@@ -527,6 +531,152 @@ function Onboarding(props) {
   );
 }
 
+
+// ── Vélib' temps réel (OpenData Paris) ────────────────────────────────────
+function useVelib(lat, lng) {
+  var [stations, setStations] = useState([]);
+  var [loading,  setLoading]  = useState(false);
+  var [error,    setError]    = useState(null);
+
+  useEffect(function() {
+    if (!lat || !lng) return;
+    setLoading(true);
+
+    // API OpenData Paris - données temps réel Vélib'
+    var url = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records" +
+      "?limit=5" +
+      "&where=distance(coordonnees_geo%2C%20geom'POINT(" + lng + "%20" + lat + ")'%2C%20800m)" +
+      "&order_by=distance(coordonnees_geo%2C%20geom'POINT(" + lng + "%20" + lat + ")')";
+
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.results) { setLoading(false); return; }
+        var formatted = data.results.map(function(s) {
+          var coords = s.coordonnees_geo;
+          var sLat = coords ? coords.lat : lat;
+          var sLng = coords ? coords.lon : lng;
+          // Distance à pied (haversine simplifié)
+          var dist = Math.round(haversine(lat, lng, sLat, sLng) * 1000);
+          return {
+            id:        s.stationcode,
+            name:      s.name,
+            dist:      dist,
+            lat:       sLat,
+            lng:       sLng,
+            mechaDispo: s.numbikesavailable - (s.ebike || 0),
+            elecDispo:  s.ebike || 0,
+            totalDispo: s.numbikesavailable || 0,
+            docks:      s.numdocksavailable || 0,
+            isOpen:     s.is_installed === "OUI" && s.is_renting === "OUI",
+          };
+        }).filter(function(s) { return s.isOpen && s.totalDispo > 0; });
+        setStations(formatted);
+        setLoading(false);
+      })
+      .catch(function(e) {
+        setError("Impossible de charger les données Vélib'");
+        setLoading(false);
+      });
+  }, [lat, lng]);
+
+  return { stations: stations, loading: loading, error: error };
+}
+
+
+// ── JCDecaux vélos en libre-service (toutes villes françaises) ─────────────
+var JCDECAUX_CITIES = {
+  paris:     { contract: "paris",     name: "Paris",     color: "#0072b9" },
+  lyon:      { contract: "lyon",      name: "Lyon",      color: "#e2001a" },
+  bordeaux:  { contract: "bordeaux",  name: "Bordeaux",  color: "#6f3996" },
+  marseille: { contract: "marseille", name: "Marseille", color: "#009fe3" },
+  toulouse:  { contract: "toulouse",  name: "Toulouse",  color: "#f0a500" },
+  nantes:    { contract: "nantes",    name: "Nantes",    color: "#00a550" },
+  lille:     { contract: "lille",     name: "Lille",     color: "#e2001a" },
+  rennes:    { contract: "rennes",    name: "Rennes",    color: "#003189" },
+  strasbourg:{ contract: "strasbourg",name: "Strasbourg",color: "#e2001a" },
+  rouen:     { contract: "rouen",     name: "Rouen",     color: "#009fe3" },
+};
+
+// Détecte la ville selon les coordonnées GPS
+function detectCity(lat, lng) {
+  var cities = [
+    { id: "paris",      lat: 48.8566, lng: 2.3522,  radius: 0.3  },
+    { id: "lyon",       lat: 45.7640, lng: 4.8357,  radius: 0.2  },
+    { id: "bordeaux",   lat: 44.8378, lng: -0.5792, radius: 0.15 },
+    { id: "marseille",  lat: 43.2965, lng: 5.3698,  radius: 0.2  },
+    { id: "toulouse",   lat: 43.6047, lng: 1.4442,  radius: 0.15 },
+    { id: "nantes",     lat: 47.2184, lng: -1.5536, radius: 0.15 },
+    { id: "lille",      lat: 50.6292, lng: 3.0573,  radius: 0.15 },
+    { id: "rennes",     lat: 48.1173, lng: -1.6778, radius: 0.12 },
+    { id: "strasbourg", lat: 48.5734, lng: 7.7521,  radius: 0.12 },
+    { id: "rouen",      lat: 49.4432, lng: 1.0993,  radius: 0.12 },
+  ];
+  for (var i = 0; i < cities.length; i++) {
+    var c = cities[i];
+    var dist = Math.sqrt(Math.pow(lat - c.lat, 2) + Math.pow(lng - c.lng, 2));
+    if (dist < c.radius) return c.id;
+  }
+  return null;
+}
+
+function useJCDecaux(lat, lng) {
+  var [stations, setStations] = useState([]);
+  var [loading,  setLoading]  = useState(false);
+  var [cityName, setCityName] = useState(null);
+
+  useEffect(function() {
+    if (!lat || !lng) return;
+    if (!JCDECAUX_KEY || JCDECAUX_KEY === "COLLE_TA_CLE_JCDECAUX") return;
+
+    var cityId = detectCity(lat, lng);
+    if (!cityId) return; // Pas de vélos JCDecaux dans cette ville
+
+    var city = JCDECAUX_CITIES[cityId];
+    setCityName(city.name);
+    setLoading(true);
+
+    fetch(
+      "https://api.jcdecaux.com/vls/v3/stations?contract=" + city.contract +
+      "&apiKey=" + JCDECAUX_KEY
+    )
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!Array.isArray(data)) { setLoading(false); return; }
+
+      // Trouver les 3 stations les plus proches
+      var withDist = data
+        .filter(function(s) { return s.status === "OPEN" && s.totalStands && s.totalStands.availabilities && s.totalStands.availabilities.bikes > 0; })
+        .map(function(s) {
+          var sLat = s.position.latitude;
+          var sLng = s.position.longitude;
+          var dist = Math.round(haversine(lat, lng, sLat, sLng) * 1000);
+          var avail = s.totalStands.availabilities;
+          return {
+            id:          s.number,
+            name:        s.name,
+            dist:        dist,
+            lat:         sLat,
+            lng:         sLng,
+            mechaDispo:  avail.mechanicalBikes || 0,
+            elecDispo:   avail.electricalBikes || 0,
+            totalDispo:  avail.bikes || 0,
+            docks:       avail.stands || 0,
+            city:        city,
+          };
+        })
+        .sort(function(a, b) { return a.dist - b.dist; })
+        .slice(0, 3);
+
+      setStations(withDist);
+      setLoading(false);
+    })
+    .catch(function() { setLoading(false); });
+  }, [lat, lng]);
+
+  return { stations: stations, loading: loading, cityName: cityName };
+}
+
 // ── Compare ────────────────────────────────────────────────────────────────
 function Compare(props) {
   var T = props.T;
@@ -540,6 +690,8 @@ function Compare(props) {
   var [sort,  setSort]  = useState("price_asc");
   var [flash, setFlash] = useState(false);
   var [passengers, setPassengers] = useState(1);
+  var velib = useVelib(from.lat, from.lng);
+  var jcdecaux = useJCDecaux(from.lat, from.lng);
 
   var km   = to ? Math.max(0.5, haversine(from.lat, from.lng, to.lat, to.lng) * 1.35) : 5.2;
   var mins = Math.round(km / 0.38);
@@ -574,10 +726,32 @@ function Compare(props) {
     return 0;
   });
 
-  var scList = Object.keys(SCOOTERS).map(function(id, i) {
+  // Scooters fictifs (Lime, Tier, Dott) + Vélib' temps réel
+  var scList = Object.keys(SCOOTERS).filter(function(id) { return id !== "velib"; }).map(function(id, i) {
     var s = SCOOTERS[id];
-    return { id: id, name: s.name, short: s.short, color: s.color, tc: s.tc, type: s.type, bat: s.bat, unlock: s.unlock, pMin: s.pMin, price: calcScPrice(id, scMins), dist: [85, 140, 210, 320][i] };
-  });
+    return { id: id, name: s.name, short: s.short, color: s.color, tc: s.tc, type: s.type, bat: s.bat, unlock: s.unlock, pMin: s.pMin, price: calcScPrice(id, scMins), dist: [85, 140, 210][i], real: false };
+  }).concat(
+    velib.stations.slice(0, 2).map(function(st) {
+      var walkMins = Math.round(st.dist / 80); // ~80m/min à pied
+      var rideMins = scMins;
+      var price = st.elecDispo > 0 ? Math.round((1 + rideMins * 0.17) * 100) / 100 : Math.round((rideMins > 45 ? 1 + (rideMins - 45) * 0.10 : 0) * 100) / 100;
+      return {
+        id: "velib_" + st.id,
+        name: "Vélib' — " + (st.elecDispo > 0 ? "Électrique" : "Mécanique"),
+        short: "Vb", color: "#0072b9", tc: "#fff",
+        type: st.elecDispo > 0 ? "Vélo électrique" : "Vélo mécanique",
+        bat: null, unlock: 0, pMin: st.elecDispo > 0 ? 0.17 : 0,
+        price: price,
+        dist: st.dist,
+        real: true,
+        mechaDispo: st.mechaDispo,
+        elecDispo: st.elecDispo,
+        totalDispo: st.totalDispo,
+        stationName: st.name,
+        walkMins: walkMins,
+      };
+    })
+  );
 
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
@@ -754,14 +928,24 @@ function Compare(props) {
           </div>
         ) : (
           <div>
+            {velib.loading && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: T.input, borderRadius: 12, marginBottom: 10, fontSize: 12, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#0072b9", animation: "pulse 1s infinite" }} />
+                Chargement des données Vélib' en temps réel…
+              </div>
+            )}
             {scList.map(function(s) {
               return (
-                <div key={s.id} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                <div key={s.id} style={{ background: T.card, border: s.real ? "1.5px solid #0072b9" : "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10, position: "relative" }}>
+                  {s.real && <div style={{ position: "absolute", top: -9, right: 12, background: "#0072b9", color: "#fff", fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 5, fontFamily: "'DM Sans',sans-serif" }}>Temps réel</div>}
                   <Logo short={s.short} color={s.color} tc={s.tc} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{s.name} — {s.type}</div>
-                    <div style={{ fontSize: 11, color: T.sub, marginTop: 3, display: "flex", alignItems: "center", gap: 8, fontFamily: "'DM Sans',sans-serif" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{s.name}</div>
+                    <div style={{ fontSize: 11, color: T.sub, marginTop: 3, display: "flex", alignItems: "center", gap: 6, fontFamily: "'DM Sans',sans-serif", flexWrap: "wrap" }}>
                       <span>📍 {s.dist} m</span>
+                      {s.real && s.walkMins && <span>🚶 {s.walkMins} min</span>}
+                      {s.real && <span style={{ color: s.elecDispo > 0 ? "#34d186" : T.sub }}>⚡ {s.elecDispo} élec</span>}
+                      {s.real && <span>🚲 {s.mechaDispo} méca</span>}
                       {s.bat && (
                         <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                           <div style={{ width: 26, height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
@@ -770,11 +954,12 @@ function Compare(props) {
                           {s.bat}%
                         </span>
                       )}
+                      {s.real && s.stationName && <span style={{ color: T.muted, fontSize: 10 }}>Station : {s.stationName.length > 20 ? s.stationName.slice(0,20)+"…" : s.stationName}</span>}
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{s.price.toFixed(2)} €</div>
-                    <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min"}</div>
+                    <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.real ? (s.elecDispo > 0 ? "0€+0,17€/min" : "Gratuit 45min") : (s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min")}</div>
                   </div>
                 </div>
               );

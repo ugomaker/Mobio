@@ -684,13 +684,64 @@ function useJCDecaux(lat, lng) {
 
 
 // ── GBFS Micro-mobilité temps réel ────────────────────────────────────────
-var GBFS_FEEDS = {
-  lime:  "https://data.lime.bike/api/partners/v2/gbfs/paris/free_bike_status.json",
-  tier:  "https://platform.tier-services.io/v2/gbfs/paris/free_bike_status.json",
-  dott:  "https://gbfs.api.ridedott.com/public/v2/paris/free_bike_status.json",
-  bird:  "https://gbfs.bird.co/paris/free_bike_status.json",
-  voi:   "https://api.voiapp.io/gbfs/v2/paris/free_bike_status.json",
-};
+// Endpoints GBFS publics — certains peuvent nécessiter un proxy CORS en prod
+var GBFS_CONFIGS = [
+  {
+    id: "lime_sc", name: "Lime", kind: "scooter",
+    urls: [
+      "https://data.lime.bike/api/partners/v2/gbfs/paris/free_bike_status.json",
+      "https://corsproxy.io/?https://data.lime.bike/api/partners/v2/gbfs/paris/free_bike_status.json",
+    ]
+  },
+  {
+    id: "lime_bk", name: "Lime Vélo", kind: "bike",
+    urls: [
+      "https://data.lime.bike/api/partners/v2/gbfs/paris/free_bike_status.json",
+    ]
+  },
+  {
+    id: "tier_sc", name: "Tier", kind: "scooter",
+    urls: [
+      "https://platform.tier-services.io/v2/gbfs/paris/free_bike_status.json",
+      "https://gbfs.tier-services.io/tier_paris/free_bike_status.json",
+      "https://corsproxy.io/?https://platform.tier-services.io/v2/gbfs/paris/free_bike_status.json",
+    ]
+  },
+  {
+    id: "dott", name: "Dott", kind: "scooter",
+    urls: [
+      "https://gbfs.api.ridedott.com/public/v2/paris/free_bike_status.json",
+      "https://corsproxy.io/?https://gbfs.api.ridedott.com/public/v2/paris/free_bike_status.json",
+    ]
+  },
+  {
+    id: "bird", name: "Bird", kind: "scooter",
+    urls: [
+      "https://mds.bird.co/gbfs/paris/free_bike_status",
+      "https://corsproxy.io/?https://mds.bird.co/gbfs/paris/free_bike_status",
+    ]
+  },
+  {
+    id: "voi", name: "Voi", kind: "scooter",
+    urls: [
+      "https://api.voiapp.io/gbfs/v2/paris/free_bike_status.json",
+    ]
+  },
+];
+
+// Essaie plusieurs URLs jusqu'à en trouver une qui marche
+function fetchWithFallback(urls, index) {
+  if (!index) index = 0;
+  if (index >= urls.length) return Promise.reject(new Error("All URLs failed"));
+  return fetch(urls[index])
+    .then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .catch(function() {
+      return fetchWithFallback(urls, index + 1);
+    });
+}
 
 function useGBFS(lat, lng) {
   var [vehicles, setVehicles] = useState({});
@@ -701,38 +752,47 @@ function useGBFS(lat, lng) {
     setLoading(true);
 
     var results = {};
-    var pending = Object.keys(GBFS_FEEDS).length;
+    var pending = GBFS_CONFIGS.length;
 
-    Object.keys(GBFS_FEEDS).forEach(function(operator) {
-      fetch(GBFS_FEEDS[operator])
-        .then(function(r) { return r.json(); })
+    function done() {
+      pending--;
+      if (pending <= 0) {
+        setVehicles(results);
+        setLoading(false);
+      }
+    }
+
+    GBFS_CONFIGS.forEach(function(config) {
+      fetchWithFallback(config.urls)
         .then(function(data) {
-          if (!data.data || !data.data.bikes) return;
-          // Filtrer les véhicules à moins de 500m
-          var nearby = data.data.bikes.filter(function(b) {
-            if (!b.lat || !b.lon) return false;
-            var dist = haversine(lat, lng, b.lat, b.lon) * 1000;
-            return dist < 500;
+          var bikes = data.data ? (data.data.bikes || data.data.vehicles || []) : [];
+          var nearby = bikes.filter(function(b) {
+            var bLat = b.lat || b.latitude;
+            var bLng = b.lon || b.longitude || b.lng;
+            if (!bLat || !bLng) return false;
+            var dist = haversine(lat, lng, bLat, bLng) * 1000;
+            return dist < 600;
           }).map(function(b) {
+            var bLat = b.lat || b.latitude;
+            var bLng = b.lon || b.longitude || b.lng;
+            var dist = Math.round(haversine(lat, lng, bLat, bLng) * 1000);
+            // Déterminer si vélo ou trottinette selon les données
+            var isEbike = (b.vehicle_type_id || "").toLowerCase().includes("bike") ||
+                          (b.form_factor || "") === "bicycle";
             return {
-              id:       b.bike_id,
-              dist:     Math.round(haversine(lat, lng, b.lat, b.lon) * 1000),
-              bat:      b.current_range_meters ? Math.round(b.current_range_meters / 200) : null,
-              type:     b.vehicle_type_id && b.vehicle_type_id.includes("bike") ? "bike" : "scooter",
-              isEbike:  b.is_disabled === false && b.vehicle_type_id && b.vehicle_type_id.includes("ebike"),
+              id:   b.bike_id || b.vehicle_id,
+              dist: dist,
+              bat:  b.current_range_meters ? Math.min(100, Math.round(b.current_range_meters / 200)) : null,
+              kind: isEbike ? "bike" : "scooter",
             };
           }).sort(function(a, b) { return a.dist - b.dist; }).slice(0, 3);
 
-          if (nearby.length > 0) results[operator] = nearby;
-        })
-        .catch(function() {})
-        .finally(function() {
-          pending--;
-          if (pending === 0) {
-            setVehicles(results);
-            setLoading(false);
+          if (nearby.length > 0) {
+            results[config.id] = { vehicles: nearby, name: config.name, kind: config.kind };
           }
-        });
+        })
+        .catch(function() { /* API indisponible — on garde les données simulées */ })
+        .then(done);
     });
   }, [lat, lng]);
 

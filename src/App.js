@@ -1235,11 +1235,12 @@ function MapView(props) {
     var mapboxgl = window.mapboxgl;
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
+    var fa0 = props.fromAddr || { lat: 48.8566, lng: 2.3522 };
     var map = new mapboxgl.Map({
       container:   mapRef.current,
       style:       "mapbox://styles/mapbox/light-v11",
-      center:      [2.325, 48.869],
-      zoom:        12.5,
+      center:      [fa0.lng, fa0.lat],
+      zoom:        14,
       interactive: true,
       attributionControl: false,
     });
@@ -1252,13 +1253,18 @@ function MapView(props) {
       mapboxRef.userMarker = userMarker;
 
       // Marqueur destination
-      var destEl = document.createElement("div");
-      destEl.style.cssText = "width:12px;height:12px;border-radius:50%;background:#1a1a2e;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3)";
-      var destMarker = new mapboxgl.Marker({ element: destEl }).setLngLat([props.toAddr ? props.toAddr.lng : 2.2945, props.toAddr ? props.toAddr.lat : 48.8584]).addTo(map);
-      mapboxRef.destMarker = destMarker;
-
       mapboxRef.current = map;
-      drawRoute(map, props.fromAddr ? props.fromAddr.lng : 2.3553, props.fromAddr ? props.fromAddr.lat : 48.8809, props.toAddr ? props.toAddr.lng : 2.2945, props.toAddr ? props.toAddr.lat : 48.8584);
+
+      // Marqueur destination + itinéraire uniquement si destination définie
+      if (props.toAddr) {
+        var destEl = document.createElement("div");
+        destEl.style.cssText = "width:12px;height:12px;border-radius:50%;background:#1a1a2e;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3)";
+        var destMarker = new mapboxgl.Marker({ element: destEl }).setLngLat([props.toAddr.lng, props.toAddr.lat]).addTo(map);
+        mapboxRef.destMarker = destMarker;
+        var fa2 = props.fromAddr || { lat: 48.8809, lng: 2.3553 };
+        drawRoute(map, fa2.lng, fa2.lat, props.toAddr.lng, props.toAddr.lat);
+      }
+
       addMarkers(map, "tous");
     });
 
@@ -1273,6 +1279,8 @@ function MapView(props) {
     var fa = props.fromAddr || { lat: 48.8809, lng: 2.3553 };
     if (!mapboxRef.current) return;
     if (mapboxRef.userMarker) mapboxRef.userMarker.setLngLat([fa.lng, fa.lat]);
+    // Recentrer la carte sur la nouvelle position si pas de destination
+    if (!props.toAddr) { mapboxRef.current.flyTo({ center: [fa.lng, fa.lat], zoom: 14, duration: 1000 }); }
     if (props.toAddr) {
       if (mapboxRef.destMarker) {
         mapboxRef.destMarker.setLngLat([props.toAddr.lng, props.toAddr.lat]);

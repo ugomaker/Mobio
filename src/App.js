@@ -590,17 +590,20 @@ function useVelib(lat, lng) {
 
 
 // ── JCDecaux vélos en libre-service (toutes villes françaises) ─────────────
+// Paris géré par Smovengo (Vélib') — pas JCDecaux
 var JCDECAUX_CITIES = {
-  paris:     { contract: "paris",     name: "Paris",     color: "#0072b9" },
-  lyon:      { contract: "lyon",      name: "Lyon",      color: "#e2001a" },
-  bordeaux:  { contract: "bordeaux",  name: "Bordeaux",  color: "#6f3996" },
-  marseille: { contract: "marseille", name: "Marseille", color: "#009fe3" },
-  toulouse:  { contract: "toulouse",  name: "Toulouse",  color: "#f0a500" },
-  nantes:    { contract: "nantes",    name: "Nantes",    color: "#00a550" },
-  lille:     { contract: "lille",     name: "Lille",     color: "#e2001a" },
-  rennes:    { contract: "rennes",    name: "Rennes",    color: "#003189" },
-  strasbourg:{ contract: "strasbourg",name: "Strasbourg",color: "#e2001a" },
-  rouen:     { contract: "rouen",     name: "Rouen",     color: "#009fe3" },
+  lyon:       { contract: "lyon",       name: "Lyon",       color: "#e2001a" },
+  bordeaux:   { contract: "bordeaux",   name: "Bordeaux",   color: "#6f3996" },
+  marseille:  { contract: "marseille",  name: "Marseille",  color: "#009fe3" },
+  toulouse:   { contract: "toulouse",   name: "Toulouse",   color: "#f0a500" },
+  nantes:     { contract: "nantes",     name: "Nantes",     color: "#00a550" },
+  lille:      { contract: "lille",      name: "Lille",      color: "#e2001a" },
+  rennes:     { contract: "rennes",     name: "Rennes",     color: "#003189" },
+  strasbourg: { contract: "strasbourg", name: "Strasbourg", color: "#e2001a" },
+  rouen:      { contract: "rouen",      name: "Rouen",      color: "#009fe3" },
+  amiens:     { contract: "amiens",     name: "Amiens",     color: "#0072b9" },
+  nancy:      { contract: "nancy",      name: "Nancy",      color: "#e2001a" },
+  creteil:    { contract: "creteil",    name: "Créteil",    color: "#0072b9" },
 };
 
 // Détecte la ville selon les coordonnées GPS
@@ -638,11 +641,12 @@ function useJCDecaux(lat, lng) {
     if (!cityId) return; // Pas de vélos JCDecaux dans cette ville
 
     var city = JCDECAUX_CITIES[cityId];
+    if (!city) return; // Ville non couverte par JCDecaux
     setCityName(city.name);
     setLoading(true);
 
     fetch(
-      "https://api.jcdecaux.com/vls/v3/stations?contract=" + city.contract +
+      "https://api.jcdecaux.com/vls/v1/stations?contract=" + city.contract +
       "&apiKey=" + JCDECAUX_KEY
     )
     .then(function(r) { return r.json(); })
@@ -651,22 +655,21 @@ function useJCDecaux(lat, lng) {
 
       // Trouver les 3 stations les plus proches
       var withDist = data
-        .filter(function(s) { return s.status === "OPEN" && s.totalStands && s.totalStands.availabilities && s.totalStands.availabilities.bikes > 0; })
+        .filter(function(s) { return s.status === "OPEN" && s.available_bikes > 0; })
         .map(function(s) {
-          var sLat = s.position.latitude;
-          var sLng = s.position.longitude;
+          var sLat = s.position.lat;
+          var sLng = s.position.lng;
           var dist = Math.round(haversine(lat, lng, sLat, sLng) * 1000);
-          var avail = s.totalStands.availabilities;
           return {
             id:          s.number,
             name:        s.name,
             dist:        dist,
             lat:         sLat,
             lng:         sLng,
-            mechaDispo:  avail.mechanicalBikes || 0,
-            elecDispo:   avail.electricalBikes || 0,
-            totalDispo:  avail.bikes || 0,
-            docks:       avail.stands || 0,
+            mechaDispo:  s.available_bikes || 0,
+            elecDispo:   0,
+            totalDispo:  s.available_bikes || 0,
+            docks:       s.available_bike_stands || 0,
             city:        city,
           };
         })
@@ -683,122 +686,6 @@ function useJCDecaux(lat, lng) {
 }
 
 
-// ── GBFS Micro-mobilité temps réel ────────────────────────────────────────
-// Endpoints GBFS publics — certains peuvent nécessiter un proxy CORS en prod
-var GBFS_CONFIGS = [
-  {
-    id: "lime_sc", name: "Lime", kind: "scooter",
-    urls: [
-      "https://data.lime.bike/api/partners/v2/gbfs/paris/free_bike_status.json",
-      "https://corsproxy.io/?https://data.lime.bike/api/partners/v2/gbfs/paris/free_bike_status.json",
-    ]
-  },
-  {
-    id: "lime_bk", name: "Lime Vélo", kind: "bike",
-    urls: [
-      "https://data.lime.bike/api/partners/v2/gbfs/paris/free_bike_status.json",
-    ]
-  },
-  {
-    id: "tier_sc", name: "Tier", kind: "scooter",
-    urls: [
-      "https://platform.tier-services.io/v2/gbfs/paris/free_bike_status.json",
-      "https://gbfs.tier-services.io/tier_paris/free_bike_status.json",
-      "https://corsproxy.io/?https://platform.tier-services.io/v2/gbfs/paris/free_bike_status.json",
-    ]
-  },
-  {
-    id: "dott", name: "Dott", kind: "scooter",
-    urls: [
-      "https://gbfs.api.ridedott.com/public/v2/paris/free_bike_status.json",
-      "https://corsproxy.io/?https://gbfs.api.ridedott.com/public/v2/paris/free_bike_status.json",
-    ]
-  },
-  {
-    id: "bird", name: "Bird", kind: "scooter",
-    urls: [
-      "https://mds.bird.co/gbfs/paris/free_bike_status",
-      "https://corsproxy.io/?https://mds.bird.co/gbfs/paris/free_bike_status",
-    ]
-  },
-  {
-    id: "voi", name: "Voi", kind: "scooter",
-    urls: [
-      "https://api.voiapp.io/gbfs/v2/paris/free_bike_status.json",
-    ]
-  },
-];
-
-// Essaie plusieurs URLs jusqu'à en trouver une qui marche
-function fetchWithFallback(urls, index) {
-  if (!index) index = 0;
-  if (index >= urls.length) return Promise.reject(new Error("All URLs failed"));
-  return fetch(urls[index])
-    .then(function(r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    })
-    .catch(function() {
-      return fetchWithFallback(urls, index + 1);
-    });
-}
-
-function useGBFS(lat, lng) {
-  var [vehicles, setVehicles] = useState({});
-  var [loading,  setLoading]  = useState(false);
-
-  useEffect(function() {
-    if (!lat || !lng) return;
-    setLoading(true);
-
-    var results = {};
-    var pending = GBFS_CONFIGS.length;
-
-    function done() {
-      pending--;
-      if (pending <= 0) {
-        setVehicles(results);
-        setLoading(false);
-      }
-    }
-
-    GBFS_CONFIGS.forEach(function(config) {
-      fetchWithFallback(config.urls)
-        .then(function(data) {
-          var bikes = data.data ? (data.data.bikes || data.data.vehicles || []) : [];
-          var nearby = bikes.filter(function(b) {
-            var bLat = b.lat || b.latitude;
-            var bLng = b.lon || b.longitude || b.lng;
-            if (!bLat || !bLng) return false;
-            var dist = haversine(lat, lng, bLat, bLng) * 1000;
-            return dist < 600;
-          }).map(function(b) {
-            var bLat = b.lat || b.latitude;
-            var bLng = b.lon || b.longitude || b.lng;
-            var dist = Math.round(haversine(lat, lng, bLat, bLng) * 1000);
-            // Déterminer si vélo ou trottinette selon les données
-            var isEbike = (b.vehicle_type_id || "").toLowerCase().includes("bike") ||
-                          (b.form_factor || "") === "bicycle";
-            return {
-              id:   b.bike_id || b.vehicle_id,
-              dist: dist,
-              bat:  b.current_range_meters ? Math.min(100, Math.round(b.current_range_meters / 200)) : null,
-              kind: isEbike ? "bike" : "scooter",
-            };
-          }).sort(function(a, b) { return a.dist - b.dist; }).slice(0, 3);
-
-          if (nearby.length > 0) {
-            results[config.id] = { vehicles: nearby, name: config.name, kind: config.kind };
-          }
-        })
-        .catch(function() { /* API indisponible — on garde les données simulées */ })
-        .then(done);
-    });
-  }, [lat, lng]);
-
-  return { vehicles: vehicles, loading: loading };
-}
-
 // ── Compare ────────────────────────────────────────────────────────────────
 function Compare(props) {
   var T = props.T;
@@ -813,9 +700,10 @@ function Compare(props) {
   var [sort,  setSort]  = useState("price_asc");
   var [flash, setFlash] = useState(false);
   var [passengers, setPassengers] = useState(1);
-  var velib = useVelib(from.lat, from.lng);
+  // Vélib' uniquement à Paris (lat ~48.8, lng ~2.3)
+  var isInParis = from.lat > 48.7 && from.lat < 49.0 && from.lng > 2.1 && from.lng < 2.6;
+  var velib = useVelib(isInParis ? from.lat : null, isInParis ? from.lng : null);
   var jcdecaux = useJCDecaux(from.lat, from.lng);
-  var gbfs = useGBFS(from.lat, from.lng);
 
   var km   = to ? Math.max(0.5, haversine(from.lat, from.lng, to.lat, to.lng) * 1.35) : 5.2;
   var mins = Math.round(km / 0.38);
@@ -1059,7 +947,7 @@ function Compare(props) {
                 );
               })}
             </div>
-            {(velib.loading || gbfs.loading) && (
+            {velib.loading && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: T.input, borderRadius: 12, marginBottom: 10, fontSize: 12, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#0072b9", animation: "pulse 1s infinite" }} />
                 Chargement des données temps réel…
@@ -1122,6 +1010,7 @@ function MapView(props) {
   var [noToken,  setNoToken]  = useState(false);
   var [filter,   setFilter]   = useState("tous");
   var [selected, setSelected] = useState(null);
+  var posRef = useRef(props.fromAddr || { lat: 48.8566, lng: 2.3522 });
 
   var km = 5.2;
 
@@ -1201,6 +1090,72 @@ function MapView(props) {
     document.head.appendChild(script);
   }, []);
 
+  // Charge les marqueurs de stations selon la position
+  function loadStationMarkers(map, pos, mapboxgl) {
+    if (!map || !pos) return;
+    var lat = pos.lat, lng = pos.lng;
+    var isInParis = lat > 48.7 && lat < 49.0 && lng > 2.1 && lng < 2.6;
+
+    // Vélib' Paris
+    if (isInParis) {
+      fetch(
+        "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records" +
+        "?limit=8&where=distance(coordonnees_geo%2C%20geom%27POINT(" + lng + "%20" + lat + ")%27%2C%201000m)" +
+        "&order_by=distance(coordonnees_geo%2C%20geom%27POINT(" + lng + "%20" + lat + ")%27)"
+      )
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.results || !map) return;
+        data.results.forEach(function(s) {
+          if (!s.coordonnees_geo) return;
+          if (s.is_installed !== "OUI" || s.is_renting !== "OUI") return;
+          if (!s.numbikesavailable || s.numbikesavailable === 0) return;
+          var el = document.createElement("div");
+          el.style.cssText = "display:inline-block;";
+          var inner = document.createElement("div");
+          inner.style.cssText = "background:#0072b9;color:white;padding:3px 7px;border-radius:10px;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap;";
+          inner.textContent = "🚲 " + s.numbikesavailable;
+          el.appendChild(inner);
+          new mapboxgl.Marker({ element: el, anchor: "center" })
+            .setLngLat([s.coordonnees_geo.lon, s.coordonnees_geo.lat])
+            .addTo(map);
+        });
+      })
+      .catch(function() {});
+    }
+
+    // JCDecaux autres villes
+    if (JCDECAUX_KEY && JCDECAUX_KEY !== "COLLE_TA_CLE_JCDECAUX") {
+      var cityId2 = detectCity(lat, lng);
+      var city2 = cityId2 ? JCDECAUX_CITIES[cityId2] : null;
+      if (city2) {
+        fetch(
+          "https://api.jcdecaux.com/vls/v1/stations?contract=" + city2.contract +
+          "&apiKey=" + JCDECAUX_KEY
+        )
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!Array.isArray(data) || !map) return;
+          data.filter(function(s) {
+            return s.status === "OPEN" && s.available_bikes > 0 &&
+              haversine(lat, lng, s.position.lat, s.position.lng) * 1000 < 1000;
+          }).slice(0, 8).forEach(function(s) {
+            var el = document.createElement("div");
+            el.style.cssText = "display:inline-block;";
+            var inner = document.createElement("div");
+            inner.style.cssText = "background:" + city2.color + ";color:white;padding:3px 7px;border-radius:10px;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap;";
+            inner.textContent = "🚲 " + s.available_bikes;
+            el.appendChild(inner);
+            new mapboxgl.Marker({ element: el, anchor: "center" })
+              .setLngLat([s.position.lng, s.position.lat])
+              .addTo(map);
+          });
+        })
+        .catch(function() {});
+      }
+    }
+  }
+
   // drawRoute — met à jour l'itinéraire sur la carte
   function drawRoute(map, fromLng, fromLat, toLng, toLat) {
     var mapboxgl = window.mapboxgl;
@@ -1266,6 +1221,10 @@ function MapView(props) {
       }
 
       addMarkers(map, "tous");
+
+      // Charger les stations au chargement initial
+      // Utiliser posRef pour avoir la position la plus récente
+      setTimeout(function() { loadStationMarkers(map, posRef.current, window.mapboxgl); }, 1000);
     });
 
     return function() {
@@ -1273,6 +1232,27 @@ function MapView(props) {
     };
   }, [ready]);
 
+
+  // Toujours garder posRef à jour
+  useEffect(function() {
+    if (props.fromAddr) posRef.current = props.fromAddr;
+  }, [props.fromAddr]);
+
+  // Recharger les stations quand la position change
+  useEffect(function() {
+    if (!props.fromAddr) return;
+    // Attendre que la carte soit prête
+    var attempts = 0;
+    var interval = setInterval(function() {
+      attempts++;
+      if (mapboxRef.current && window.mapboxgl) {
+        loadStationMarkers(mapboxRef.current, props.fromAddr, window.mapboxgl);
+        clearInterval(interval);
+      }
+      if (attempts > 20) clearInterval(interval); // timeout après 10s
+    }, 500);
+    return function() { clearInterval(interval); };
+  }, [props.fromAddr]);
 
   // Mettre à jour l'itinéraire + marqueurs quand les adresses changent
   useEffect(function() {
@@ -1301,6 +1281,8 @@ function MapView(props) {
     if (!mapboxRef.current) return;
     addMarkers(mapboxRef.current, filter);
   }, [filter]);
+
+
 
   var selVtc = selected && PLATFORMS[selected] ? { id: selected, ...PLATFORMS[selected], price: calcVtcPrice(selected, km, 14), eta: [3,4,6,8][Object.keys(PLATFORMS).indexOf(selected)] } : null;
   var selSc  = selected && SCOOTERS[selected]  ? { id: selected, ...SCOOTERS[selected] } : null;
@@ -1421,7 +1403,7 @@ function MapView(props) {
               </div>
             );
           })}
-          {Object.keys(SCOOTERS).filter(function(id) { var s = SCOOTERS[id]; return s && (filter === "tous" || filter === s.type); }).map(function(id) {
+          {Object.keys(SCOOTERS).filter(function(id) { if (id === "velib") return false; var s = SCOOTERS[id]; return s && (filter === "tous" || filter === s.type); }).map(function(id) {
             var s = SCOOTERS[id];
             return (
               <div key={id} style={{ flexShrink: 0, width: 110, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "10px 11px", cursor: "pointer" }}

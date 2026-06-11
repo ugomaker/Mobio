@@ -1095,6 +1095,7 @@ function MapView(props) {
     if (!map || !pos) return;
     var lat = pos.lat, lng = pos.lng;
     var isInParis = lat > 48.7 && lat < 49.0 && lng > 2.1 && lng < 2.6;
+    console.log('[Mobio] loadStationMarkers appelé - lat:', lat, 'lng:', lng, 'isInParis:', isInParis);
 
     // Vélib' Paris
     if (isInParis) {

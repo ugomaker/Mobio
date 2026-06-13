@@ -1099,6 +1099,7 @@ function MapView(props) {
 
     // Vélib' Paris
     if (isInParis) {
+      console.log('[Mobio] Chargement Vélib'...');
       fetch(
         "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records" +
         "?limit=8&where=distance(coordonnees_geo%2C%20geom%27POINT(" + lng + "%20" + lat + ")%27%2C%201000m)" +
@@ -1106,6 +1107,7 @@ function MapView(props) {
       )
       .then(function(r) { return r.json(); })
       .then(function(data) {
+        console.log('[Mobio] Vélib réponse:', data.results ? data.results.length + ' stations' : 'pas de results', data);
         if (!data.results || !map) return;
         data.results.forEach(function(s) {
           if (!s.coordonnees_geo) return;
@@ -1122,7 +1124,7 @@ function MapView(props) {
             .addTo(map);
         });
       })
-      .catch(function() {});
+      .catch(function(e) { console.log('[Mobio] Vélib erreur:', e); });
     }
 
     // JCDecaux autres villes

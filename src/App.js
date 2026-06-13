@@ -592,33 +592,44 @@ function useVelib(lat, lng) {
 // ── JCDecaux vélos en libre-service (toutes villes françaises) ─────────────
 // Paris géré par Smovengo (Vélib') — pas JCDecaux
 var JCDECAUX_CITIES = {
-  lyon:       { contract: "lyon",       name: "Lyon",       color: "#e2001a" },
-  bordeaux:   { contract: "bordeaux",   name: "Bordeaux",   color: "#6f3996" },
-  marseille:  { contract: "marseille",  name: "Marseille",  color: "#009fe3" },
-  toulouse:   { contract: "toulouse",   name: "Toulouse",   color: "#f0a500" },
-  nantes:     { contract: "nantes",     name: "Nantes",     color: "#00a550" },
-  lille:      { contract: "lille",      name: "Lille",      color: "#e2001a" },
-  rennes:     { contract: "rennes",     name: "Rennes",     color: "#003189" },
-  strasbourg: { contract: "strasbourg", name: "Strasbourg", color: "#e2001a" },
-  rouen:      { contract: "rouen",      name: "Rouen",      color: "#009fe3" },
-  amiens:     { contract: "amiens",     name: "Amiens",     color: "#0072b9" },
-  nancy:      { contract: "nancy",      name: "Nancy",      color: "#e2001a" },
+  lyon:       { contract: "lyon",       name: "Lyon",       color: "#e2001a",  service: "Velo'v",      unlock: 0, pMin: 0.10, freeMins: 30 },
+  bordeaux:   { contract: "bordeaux",   name: "Bordeaux",   color: "#6f3996", service: "V3",           unlock: 0, pMin: 0.10, freeMins: 30 },
+  marseille:  { contract: "marseille",  name: "Marseille",  color: "#009fe3", service: "Le Velo",      unlock: 0, pMin: 0.10, freeMins: 30 },
+  toulouse:   { contract: "toulouse",   name: "Toulouse",   color: "#f0a500", service: "VeloToulouse", unlock: 0, pMin: 0.10, freeMins: 30 },
+  nantes:     { contract: "nantes",     name: "Nantes",     color: "#00a550", service: "Bicloo",       unlock: 0, pMin: 0.10, freeMins: 30 },
+  lille:      { contract: "lille",      name: "Lille",      color: "#e2001a", service: "V'Lille",     unlock: 0, pMin: 0.10, freeMins: 30 },
+  rennes:     { contract: "rennes",     name: "Rennes",     color: "#003189", service: "Star",         unlock: 0, pMin: 0.10, freeMins: 30 },
+  strasbourg: { contract: "strasbourg", name: "Strasbourg", color: "#e2001a", service: "Velhop",      unlock: 0, pMin: 0.10, freeMins: 30 },
+  rouen:      { contract: "rouen",      name: "Rouen",      color: "#009fe3", service: "Cy'clic",     unlock: 0, pMin: 0.10, freeMins: 30 },
+  amiens:     { contract: "amiens",     name: "Amiens",     color: "#0072b9", service: "Velam",        unlock: 0, pMin: 0.10, freeMins: 30 },
+  nancy:      { contract: "nancy",      name: "Nancy",      color: "#e2001a", service: "velo+",        unlock: 0, pMin: 0.10, freeMins: 30 },
   creteil:    { contract: "creteil",    name: "Créteil",    color: "#0072b9" },
 };
 
 // Détecte la ville selon les coordonnées GPS
 function detectCity(lat, lng) {
   var cities = [
-    { id: "paris",      lat: 48.8566, lng: 2.3522,  radius: 0.3  },
-    { id: "lyon",       lat: 45.7640, lng: 4.8357,  radius: 0.2  },
-    { id: "bordeaux",   lat: 44.8378, lng: -0.5792, radius: 0.15 },
-    { id: "marseille",  lat: 43.2965, lng: 5.3698,  radius: 0.2  },
-    { id: "toulouse",   lat: 43.6047, lng: 1.4442,  radius: 0.15 },
-    { id: "nantes",     lat: 47.2184, lng: -1.5536, radius: 0.15 },
-    { id: "lille",      lat: 50.6292, lng: 3.0573,  radius: 0.15 },
-    { id: "rennes",     lat: 48.1173, lng: -1.6778, radius: 0.12 },
-    { id: "strasbourg", lat: 48.5734, lng: 7.7521,  radius: 0.12 },
-    { id: "rouen",      lat: 49.4432, lng: 1.0993,  radius: 0.12 },
+    { id: "paris",           lat: 48.8566, lng: 2.3522,   radius: 0.3  },
+    { id: "lyon",            lat: 45.7640, lng: 4.8357,   radius: 0.2  },
+    { id: "bordeaux",        lat: 44.8378, lng: -0.5792,  radius: 0.15 },
+    { id: "marseille",       lat: 43.2965, lng: 5.3698,   radius: 0.2  },
+    { id: "toulouse",        lat: 43.6047, lng: 1.4442,   radius: 0.15 },
+    { id: "nantes",          lat: 47.2184, lng: -1.5536,  radius: 0.15 },
+    { id: "lille",           lat: 50.6292, lng: 3.0573,   radius: 0.15 },
+    { id: "rennes",          lat: 48.1173, lng: -1.6778,  radius: 0.12 },
+    { id: "strasbourg",      lat: 48.5734, lng: 7.7521,   radius: 0.12 },
+    { id: "rouen",           lat: 49.4432, lng: 1.0993,   radius: 0.12 },
+    { id: "amiens",          lat: 49.8942, lng: 2.2957,   radius: 0.10 },
+    { id: "nancy",           lat: 48.6921, lng: 6.1844,   radius: 0.10 },
+    { id: "creteil",         lat: 48.7904, lng: 2.4558,   radius: 0.10 },
+    { id: "besancon",        lat: 47.2378, lng: 6.0241,   radius: 0.10 },
+    { id: "mulhouse",        lat: 47.7508, lng: 7.3359,   radius: 0.10 },
+    { id: "aix-en-provence", lat: 43.5297, lng: 5.4474,   radius: 0.10 },
+    { id: "cergy-pontoise",  lat: 49.0369, lng: 2.0752,   radius: 0.12 },
+    { id: "montbeliard",     lat: 47.5100, lng: 6.7983,   radius: 0.08 },
+    { id: "brest",           lat: 48.3904, lng: -4.4861,  radius: 0.10 },
+    { id: "caen",            lat: 49.1829, lng: -0.3707,  radius: 0.10 },
+    { id: "montpellier",     lat: 43.6108, lng: 3.8767,   radius: 0.15 },
   ];
   for (var i = 0; i < cities.length; i++) {
     var c = cities[i];
@@ -978,7 +989,7 @@ function Compare(props) {
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{s.price.toFixed(2)} €</div>
-                    <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.real ? (s.elecDispo > 0 ? "0€+0,17€/min" : "Gratuit 45min") : (s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min")}</div>
+                    <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.real && s.type === "station" ? (s.freeMins ? "Gratuit " + s.freeMins + "min · ~" + s.pMin + "€/min ensuite" : "Gratuit 45min · ~0,17€/min ensuite") : (s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min")}</div>
                   </div>
                 </div>
               );

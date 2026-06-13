@@ -1099,7 +1099,7 @@ function MapView(props) {
 
     // Vélib' Paris
     if (isInParis) {
-      console.log('[Mobio] Chargement Vélib'...');
+      console.log("[Mobio] Chargement Velib...");
       fetch(
         "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records" +
         "?limit=8&where=distance(coordonnees_geo%2C%20geom%27POINT(" + lng + "%20" + lat + ")%27%2C%201000m)" +

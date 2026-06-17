@@ -111,26 +111,26 @@ var NOTIF_TEMPLATES = [
 
 // ── Textes légaux ───────────────────────────────────────────────────────────
 var CGU_TEXT = [
-  { title: "1. Éditeur de l'application", content: "L'application Mobio est éditée par ⚠️ TON PRÉNOM NOM ⚠️, auto-entrepreneur immatriculé sous le numéro SIRET ⚠️ TON SIRET ⚠️, domicilié à ⚠️ TON ADRESSE ⚠️, France. Contact : contact@mobio.app" },
+  { title: "1. Éditeur de l'application", content: "L'application Mobio est éditée par Ugo Azoulay, auto-entrepreneur immatriculé sous le numéro SIRET 91812281300028, domicilié à 207 rue du Rouet, 13008 Marseille, France. Contact : ugo.azoulay@gmail.com" },
   { title: "2. Description du service", content: "Mobio est une application de comparaison de prix permettant aux utilisateurs de comparer en temps réel les tarifs des plateformes de VTC (Uber, Bolt, Heetch, Marcel) et de micro-mobilité (Lime, Tier, Dott, Vélib'). Mobio n'est pas une plateforme de réservation et n'est affiliée à aucune des plateformes comparées." },
   { title: "3. Accès au service", content: "L'accès à Mobio est gratuit. Certaines fonctionnalités avancées nécessitent un abonnement Pro. L'utilisateur doit être âgé d'au moins 18 ans pour utiliser le service. L'éditeur se réserve le droit de suspendre ou modifier le service à tout moment." },
   { title: "4. Responsabilité", content: "Les prix affichés sur Mobio sont des estimations basées sur les grilles tarifaires publiques des plateformes. Mobio ne garantit pas l'exactitude des prix en temps réel, qui peuvent varier selon les conditions de trafic, la demande et les politiques tarifaires des plateformes. L'éditeur ne saurait être tenu responsable des écarts entre les prix affichés et les prix effectivement facturés par les plateformes." },
   { title: "5. Propriété intellectuelle", content: "L'application Mobio, son design, son code source et ses contenus sont la propriété exclusive de l'éditeur. Toute reproduction, modification ou distribution sans autorisation écrite préalable est interdite." },
   { title: "6. Droit applicable", content: "Les présentes CGU sont soumises au droit français. En cas de litige, les tribunaux français seront seuls compétents. Tout différend sera soumis à une tentative de médiation préalable." },
   { title: "7. Modification des CGU", content: "L'éditeur se réserve le droit de modifier les présentes CGU à tout moment. Les utilisateurs seront informés de toute modification significative par notification dans l'application. La date de dernière mise à jour est indiquée en bas de ce document." },
-  { title: "Dernière mise à jour", content: "Mai 2025" },
+  { title: "Dernière mise à jour", content: "Juin 2026" },
 ];
 
 var PRIVACY_TEXT = [
-  { title: "1. Responsable du traitement", content: "Le responsable du traitement des données est ⚠️ TON PRÉNOM NOM ⚠️, auto-entrepreneur, domicilié à ⚠️ TON ADRESSE ⚠️, France. Contact DPO : contact@mobio.app" },
+  { title: "1. Responsable du traitement", content: "Le responsable du traitement des données est Ugo Azoulay, auto-entrepreneur, domicilié à 207 rue du Rouet, 13008 Marseille, France. Contact DPO : ugo.azoulay@gmail.com" },
   { title: "2. Données collectées", content: "Mobio collecte les données suivantes : données de localisation (avec votre consentement), adresses de départ et d'arrivée saisies, adresses favorites enregistrées, historique des trajets consultés, préférences de l'application. Aucune donnée bancaire n'est collectée directement par Mobio." },
   { title: "3. Finalités du traitement", content: "Vos données sont utilisées pour : fournir le service de comparaison de prix, améliorer les recommandations et l'expérience utilisateur, envoyer des notifications (avec votre consentement), établir des statistiques d'usage anonymisées." },
   { title: "4. Base légale", content: "Le traitement de vos données est fondé sur : votre consentement (localisation, notifications), l'exécution du contrat (fourniture du service), l'intérêt légitime (amélioration du service, sécurité)." },
   { title: "5. Durée de conservation", content: "Vos données sont conservées pendant toute la durée de votre utilisation de l'application. L'historique des trajets est conservé 12 mois. En cas de suppression du compte, vos données sont effacées sous 30 jours." },
-  { title: "6. Vos droits (RGPD)", content: "Conformément au RGPD, vous disposez des droits suivants : droit d'accès à vos données, droit de rectification, droit à l'effacement (droit à l'oubli), droit à la portabilité, droit d'opposition au traitement. Pour exercer ces droits, contactez : contact@mobio.app. Vous pouvez également adresser une réclamation à la CNIL (www.cnil.fr)." },
+  { title: "6. Vos droits (RGPD)", content: "Conformément au RGPD, vous disposez des droits suivants : droit d'accès à vos données, droit de rectification, droit à l'effacement (droit à l'oubli), droit à la portabilité, droit d'opposition au traitement. Pour exercer ces droits, contactez : ugo.azoulay@gmail.com. Vous pouvez également adresser une réclamation à la CNIL (www.cnil.fr)." },
   { title: "7. Partage des données", content: "Mobio ne vend jamais vos données personnelles à des tiers. Vos données peuvent être partagées avec : Mapbox (cartographie, politique de confidentialité sur mapbox.com), les plateformes VTC/mobilité uniquement lors d'un clic de redirection vers leur application." },
   { title: "8. Cookies", content: "Mobio utilise des cookies techniques nécessaires au fonctionnement de l'application et des cookies de mesure d'audience anonymisée. Vous pouvez gérer vos préférences cookies depuis les paramètres de l'application." },
-  { title: "Dernière mise à jour", content: "Mai 2025" },
+  { title: "Dernière mise à jour", content: "Juin 2026" },
 ];
 
 // ── Utilitaires ────────────────────────────────────────────────────────────
@@ -550,12 +550,14 @@ function useVelib(lat, lng) {
     // API OpenData Paris - données temps réel Vélib'
     var url = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/velib-disponibilite-en-temps-reel/records" +
       "?limit=5" +
-      "&where=distance(coordonnees_geo%2C%20geom'POINT(" + lng + "%20" + lat + ")'%2C%20800m)" +
-      "&order_by=distance(coordonnees_geo%2C%20geom'POINT(" + lng + "%20" + lat + ")')";
+      "&where=distance(coordonnees_geo%2C%20geom%27POINT(" + lng + "%20" + lat + ")%27%2C%20800m)" +
+      "&order_by=distance(coordonnees_geo%2C%20geom%27POINT(" + lng + "%20" + lat + ")%27)";
 
+    console.log('[Mobio] useVelib fetch:', url);
     fetch(url)
       .then(function(r) { return r.json(); })
       .then(function(data) {
+        console.log('[Mobio] useVelib réponse:', data.results ? data.results.length + ' stations' : 'vide', data);
         if (!data.results) { setLoading(false); return; }
         var formatted = data.results.map(function(s) {
           var coords = s.coordonnees_geo;
@@ -760,9 +762,10 @@ function Compare(props) {
       var price = st.elecDispo > 0 ? Math.round((1 + rideMins * 0.17) * 100) / 100 : Math.round((rideMins > 45 ? 1 + (rideMins - 45) * 0.10 : 0) * 100) / 100;
       return {
         id: "velib_" + st.id,
-        name: "Vélib' — " + (st.elecDispo > 0 ? "Électrique" : "Mécanique"),
+        name: "Vélib'",  stationLabel: st.elecDispo > 0 ? "Électrique" : "Mécanique",
         short: "Vb", color: "#0072b9", tc: "#fff",
-        type: st.elecDispo > 0 ? "Vélo électrique" : "Vélo mécanique",
+        type: "station",
+        subtype: st.elecDispo > 0 ? "Électrique" : "Mécanique",
         bat: null, unlock: 0, pMin: st.elecDispo > 0 ? 0.17 : 0,
         price: price,
         dist: st.dist,
@@ -852,7 +855,7 @@ function Compare(props) {
           >+ Nouveau</div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+        {props.toAddr && <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
           {[[km.toFixed(1) + " km", "Distance"], [mins + " min", "Durée"], [trafLabel, "Trafic"]].map(function(item, i) {
             return (
               <div key={item[1]} style={{ flex: 1, background: T.input, borderRadius: 8, padding: "7px 8px", textAlign: "center" }}>
@@ -861,7 +864,7 @@ function Compare(props) {
               </div>
             );
           })}
-        </div>
+        </div>}
 
         {/* Sélecteur passagers */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, background: T.input, borderRadius: 10, padding: "8px 12px" }}>
@@ -964,7 +967,19 @@ function Compare(props) {
                 Chargement des données temps réel…
               </div>
             )}
-            {scList.filter(function(s) { if (microFilter === "all") return true; var type = s.real ? s.type : (SCOOTERS[s.id] ? SCOOTERS[s.id].type : null); return type === microFilter; }).map(function(s) {
+            {scList.filter(function(s) {
+              // Filtrer par catégorie
+              if (microFilter !== "all") {
+                var type = s.real ? s.type : (SCOOTERS[s.id] ? SCOOTERS[s.id].type : null);
+                if (type !== microFilter) return false;
+              }
+              // Sans destination: seulement les stations réelles dans 1km
+              if (!props.toAddr) {
+                if (!s.real) return false;
+                if (s.dist > 1000) return false;
+              }
+              return true;
+            }).map(function(s) {
               return (
                 <div key={s.id} style={{ background: T.card, border: s.real ? "1.5px solid #0072b9" : "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10, position: "relative" }}>
                   {s.real && <div style={{ position: "absolute", top: -9, right: 12, background: "#0072b9", color: "#fff", fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 5, fontFamily: "'DM Sans',sans-serif" }}>Temps réel</div>}
@@ -972,8 +987,8 @@ function Compare(props) {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{s.name}</div>
                     <div style={{ fontSize: 11, color: T.sub, marginTop: 3, display: "flex", alignItems: "center", gap: 6, fontFamily: "'DM Sans',sans-serif", flexWrap: "wrap" }}>
-                      <span>📍 {s.dist} m</span>
-                      {s.real && s.walkMins && <span>🚶 {s.walkMins} min</span>}
+                      {s.real && s.dist && <span>🚶 {s.dist < 1000 ? s.dist + " m" : (s.dist/1000).toFixed(1) + " km"} à pied</span>}
+                      {!s.real && props.toAddr && <span>📍 {s.dist} m</span>}
                       {s.real && <span style={{ color: s.elecDispo > 0 ? "#34d186" : T.sub }}>⚡ {s.elecDispo} élec</span>}
                       {s.real && <span>🚲 {s.mechaDispo} méca</span>}
                       {s.bat && (
@@ -988,7 +1003,9 @@ function Compare(props) {
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{s.price.toFixed(2)} €</div>
+                    {props.toAddr ? (
+                      <div style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{s.price.toFixed(2)} €</div>
+                    ) : null}
                     <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.real && s.type === "station" ? (s.freeMins ? "Gratuit " + s.freeMins + "min · ~" + s.pMin + "€/min ensuite" : "Gratuit 45min · ~0,17€/min ensuite") : (s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min")}</div>
                   </div>
                 </div>
@@ -1021,6 +1038,7 @@ function MapView(props) {
   var [noToken,  setNoToken]  = useState(false);
   var [filter,   setFilter]   = useState("tous");
   var [selected, setSelected] = useState(null);
+  var [mapStations, setMapStations] = useState([]);
   var posRef = useRef(props.fromAddr || { lat: 48.8566, lng: 2.3522 });
 
   var km = 5.2;
@@ -1120,6 +1138,12 @@ function MapView(props) {
       .then(function(data) {
         console.log('[Mobio] Vélib réponse:', data.results ? data.results.length + ' stations' : 'pas de results', data);
         if (!data.results || !map) return;
+        var newStations = data.results.filter(function(s) {
+          return s.coordonnees_geo && s.is_installed === "OUI" && s.is_renting === "OUI" && s.numbikesavailable > 0;
+        }).map(function(s) {
+          return { id: s.stationcode, name: s.name, total: s.numbikesavailable, elec: s.ebike || 0, lat: s.coordonnees_geo.lat, lng: s.coordonnees_geo.lon };
+        });
+        setMapStations(newStations);
         data.results.forEach(function(s) {
           if (!s.coordonnees_geo) return;
           if (s.is_installed !== "OUI" || s.is_renting !== "OUI") return;
@@ -1130,6 +1154,44 @@ function MapView(props) {
           inner.style.cssText = "background:#0072b9;color:white;padding:3px 7px;border-radius:10px;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap;";
           inner.textContent = "🚲 " + s.numbikesavailable;
           el.appendChild(inner);
+          (function(station) {
+            var popup = new mapboxgl.Popup({ offset: 20, closeButton: true })
+              .setHTML(
+                "<div style='font-family:DM Sans,sans-serif;padding:4px 2px'>" +
+                "<div style='font-weight:700;font-size:13px;margin-bottom:4px'>" + station.name + "</div>" +
+                "<div style='font-size:12px;color:#555'>🚲 " + station.numbikesavailable + " vélos dispo</div>" +
+                "<div style='font-size:12px;color:#555'>🔋 " + (station.ebike || 0) + " électriques</div>" +
+                "<div style='font-size:11px;color:#888;margin-top:4px'>Gratuit 45min · ~0,17€/min</div>" +
+                "</div>"
+              );
+            inner.addEventListener("click", function() {
+              popup.setLngLat([station.coordonnees_geo.lon, station.coordonnees_geo.lat]).addTo(map);
+              // Tracer l'itinéraire piéton vers la station
+              var userPos = posRef.current;
+              if (userPos) {
+                fetch("https://api.mapbox.com/directions/v5/mapbox/walking/" +
+                  userPos.lng + "," + userPos.lat + ";" +
+                  station.coordonnees_geo.lon + "," + station.coordonnees_geo.lat +
+                  "?geometries=geojson&access_token=" + MAPBOX_TOKEN)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                  if (!data.routes || !data.routes[0]) return;
+                  var geom = data.routes[0].geometry;
+                  var duration = Math.ceil(data.routes[0].duration / 60);
+                  if (mapboxRef.current.getSource("walking-route")) {
+                    mapboxRef.current.getSource("walking-route").setData(geom);
+                  } else {
+                    mapboxRef.current.addSource("walking-route", { type: "geojson", data: geom });
+                    mapboxRef.current.addLayer({ id: "walking-route", type: "line", source: "walking-route",
+                      paint: { "line-color": "#0072b9", "line-width": 3, "line-dasharray": [2, 2] }
+                    });
+                  }
+                  popup.setHTML(popup.getElement().querySelector("div").innerHTML +
+                    "<div style='font-size:11px;color:#0072b9;margin-top:4px'>🚶 " + duration + " min à pied</div>");
+                }).catch(function() {});
+              }
+            });
+          })(s);
           new mapboxgl.Marker({ element: el, anchor: "center" })
             .setLngLat([s.coordonnees_geo.lon, s.coordonnees_geo.lat])
             .addTo(map);
@@ -1417,6 +1479,17 @@ function MapView(props) {
               </div>
             );
           })}
+          {(filter === "tous" || filter === "station") && mapStations.slice(0, 3).map(function(st) {
+            return (
+              <div key={"vb_" + st.id} style={{ flexShrink: 0, width: 110, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "10px 11px" }}>
+                <Logo short="Vb" color="#0072b9" tc="#fff" size={28} />
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginTop: 6, fontFamily: "'DM Sans',sans-serif" }}>Vélib'</div>
+                <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif", marginBottom: 2 }}>{st.name.length > 18 ? st.name.slice(0,18)+"…" : st.name}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#0072b9", fontFamily: "'DM Sans',sans-serif" }}>🚲 {st.total} vélos</div>
+                <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Gratuit 45min</div>
+              </div>
+            );
+          })}
           {Object.keys(SCOOTERS).filter(function(id) { if (id === "velib") return false; var s = SCOOTERS[id]; return s && (filter === "tous" || filter === s.type); }).map(function(id) {
             var s = SCOOTERS[id];
             return (
@@ -1444,10 +1517,62 @@ function MapView(props) {
 }
 
 // ── Detail modal ───────────────────────────────────────────────────────────
+// ── Deep links VTC ───────────────────────────────────────────────────────
+function openVtcApp(platformId, fromAddr, toAddr) {
+  if (!fromAddr || !toAddr) return;
+  var pLat = fromAddr.lat, pLng = fromAddr.lng;
+  var dLat = toAddr.lat,   dLng = toAddr.lng;
+  var pName = encodeURIComponent(fromAddr.label || fromAddr.name || "Ma position");
+  var dName = encodeURIComponent(toAddr.label || toAddr.name || "Destination");
+
+  var deepLinks = {
+    uber: {
+      app: "uber://?action=setPickup" +
+           "&pickup[latitude]=" + pLat + "&pickup[longitude]=" + pLng +
+           "&pickup[nickname]=" + pName +
+           "&dropoff[latitude]=" + dLat + "&dropoff[longitude]=" + dLng +
+           "&dropoff[nickname]=" + dName,
+      web: "https://m.uber.com/ul/?action=setPickup" +
+           "&pickup[latitude]=" + pLat + "&pickup[longitude]=" + pLng +
+           "&dropoff[latitude]=" + dLat + "&dropoff[longitude]=" + dLng,
+    },
+    bolt: {
+      app: "bolt://ride?pickup_latitude=" + pLat + "&pickup_longitude=" + pLng +
+           "&destination_latitude=" + dLat + "&destination_longitude=" + dLng,
+      web: "https://bolt.eu/en/cities/",
+    },
+    heetch: {
+      app: "heetch://request?pickup_lat=" + pLat + "&pickup_lng=" + pLng +
+           "&dropoff_lat=" + dLat + "&dropoff_lng=" + dLng,
+      web: "https://www.heetch.com/",
+    },
+    marcel: {
+      app: null, // pas de deep link public documenté
+      web: "https://www.marcel.cab/",
+    },
+  };
+
+  var links = deepLinks[platformId];
+  if (!links) return;
+
+  if (links.app) {
+    // Tente d'ouvrir l'app native
+    window.location.href = links.app;
+    // Fallback vers le web après un court délai si l'app n'est pas installée
+    setTimeout(function() {
+      window.open(links.web, "_blank");
+    }, 1500);
+  } else {
+    window.open(links.web, "_blank");
+  }
+}
+
 function Detail(props) {
   var v = props.v;
   var T = props.T;
-  var km = 5.2, mins = 14;
+  var hasRoute = !!(props.fromAddr && props.toAddr);
+  var km = hasRoute ? Math.max(0.5, haversine(props.fromAddr.lat, props.fromAddr.lng, props.toAddr.lat, props.toAddr.lng) * 1.35) : 0;
+  var mins = hasRoute ? Math.round(km / 0.38) : 0;
   var allPrices = Object.keys(PLATFORMS).map(function(id) {
     return { id: id, name: PLATFORMS[id].name, price: calcVtcPrice(id, km, mins) };
   }).sort(function(a, b) { return a.price - b.price; });
@@ -1464,14 +1589,16 @@ function Detail(props) {
               <div style={{ fontSize: 18, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{v.name} — Standard</div>
               <div style={{ fontSize: 12, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>4 passagers · Berline</div>
             </div>
-            <div style={{ marginLeft: "auto", textAlign: "right" }}>
-              <div style={{ fontSize: 28, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{v.price.toFixed(2)} €</div>
-              <div style={{ fontSize: 11, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>prix estimé</div>
-            </div>
+            {hasRoute && (
+              <div style={{ marginLeft: "auto", textAlign: "right" }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{calcVtcPrice(v.id, km, mins).toFixed(2)} €</div>
+                <div style={{ fontSize: 11, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>prix estimé</div>
+              </div>
+            )}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 14 }}>
-            {[["⏱", v.eta + " min", "Arrivée"], ["🗺", "14 min", "Trajet"], ["📍", "5,2 km", "Distance"]].map(function(item) {
+          {hasRoute && <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 14 }}>
+            {[["⏱", v.eta + " min", "Arrivée"], ["🗺", mins + " min", "Trajet"], ["📍", km.toFixed(1) + " km", "Distance"]].map(function(item) {
               return (
                 <div key={item[2]} style={{ background: T.input, borderRadius: 10, padding: "9px 8px", textAlign: "center" }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{item[0]} {item[1]}</div>
@@ -1479,9 +1606,9 @@ function Detail(props) {
                 </div>
               );
             })}
-          </div>
+          </div>}
 
-          <div style={{ marginBottom: 14 }}>
+          {hasRoute && <div style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginBottom: 8, fontFamily: "'DM Sans',sans-serif" }}>Comparaison des prix</div>
             <div style={{ background: T.input, borderRadius: 12, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 }}>
               {allPrices.map(function(p) {
@@ -1496,10 +1623,14 @@ function Detail(props) {
                 );
               })}
             </div>
-          </div>
+          </div>}
 
-          <button style={{ width: "100%", background: T.accent, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", marginBottom: 10 }}>
-            Réserver sur {v.name} ↗
+          <button
+            onClick={function() { openVtcApp(v.id, props.fromAddr, props.toAddr); }}
+            disabled={!props.toAddr}
+            style={{ width: "100%", background: props.toAddr ? T.accent : T.border, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontSize: 15, fontWeight: 700, cursor: props.toAddr ? "pointer" : "not-allowed", fontFamily: "'DM Sans',sans-serif", marginBottom: 10, opacity: props.toAddr ? 1 : 0.5 }}
+          >
+            {props.toAddr ? "Réserver sur " + v.name + " ↗" : "Saisis une destination pour réserver"}
           </button>
           <button onClick={props.onClose} style={{ width: "100%", background: "transparent", color: T.sub, border: "1px solid " + T.border, borderRadius: 14, padding: 12, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
             ← Retour
@@ -1640,7 +1771,19 @@ function Profile(props) {
         {/* Plateformes */}
         <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 8, fontFamily: "'DM Sans',sans-serif" }}>Plateformes</div>
         <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
-          {Object.keys(PLATFORMS).concat(Object.keys(SCOOTERS)).map(function(id, i, arr) {
+          {(function() {
+            // Dédupliquer — un seul entry par nom d'opérateur
+            var seen = {};
+            var ids = Object.keys(PLATFORMS).concat(Object.keys(SCOOTERS).filter(function(id) {
+              return id !== "velib"; // Vélib' n'est pas une app à connecter
+            }));
+            return ids.filter(function(id) {
+              var p = PLATFORMS[id] || SCOOTERS[id];
+              if (!p || seen[p.name]) return false;
+              seen[p.name] = true;
+              return true;
+            });
+          })().map(function(id, i, arr) {
             var p = PLATFORMS[id] || SCOOTERS[id];
             return (
               <div key={id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 13px", borderBottom: i < arr.length - 1 ? "1px solid " + T.bsub : "none" }}>
@@ -1696,7 +1839,7 @@ function Profile(props) {
         <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
           {[
             ["ℹ️", "À propos de Mobio", "Version 1.0.0 (beta)", function() { setShowAbout(true); }],
-            ["📧", "Nous contacter",    "contact@mobio.app",    function() { window.location.href = "mailto:contact@mobio.app"; }],
+            ["📧", "Nous contacter",    "ugo.azoulay@gmail.com",    function() { window.location.href = "mailto:ugo.azoulay@gmail.com"; }],
             ["⭐", "Noter l'app",       "Laisser un avis",      null],
             ["🔗", "Partager Mobio",    "Envoyer à un ami",     function() { if(navigator.share){ navigator.share({title:"Mobio",text:"Compare tous les VTC en un clin d'œil",url:window.location.href}); } }],
           ].map(function(item, i, arr) {
@@ -1740,7 +1883,7 @@ function Profile(props) {
               </div>
               {(legalModal === "cgu" || legalModal === "privacy") && (
                 <div style={{ background: "#fff3cd", border: "1px solid #ffc107", borderRadius: 10, padding: "8px 12px", marginBottom: 12, fontSize: 11, color: "#854f0b", fontFamily: "'DM Sans',sans-serif", lineHeight: 1.5 }}>
-                  ⚠️ Remplace les zones marquées ⚠️ par tes vraies informations avant de publier sur l'App Store.
+                  
                 </div>
               )}
             </div>
@@ -1776,7 +1919,7 @@ function Profile(props) {
               {"Mobio compare en temps réel tous les VTC et services de micro-mobilité — Uber, Bolt, Heetch, Lime, Tier et plus. Trouvez le meilleur prix en un coup d'œil, sans jongler entre plusieurs applications."}
             </div>
             <div style={{ background: T.input, borderRadius: 12, overflow: "hidden", marginBottom: 14 }}>
-              {[["🚀","Fondé en","2025"],["📧","Contact","contact@mobio.app"],["🌍","Site web","mobio.app"]].map(function(item, i, arr) {
+              {[["🚀","Fondé en","2025"],["📧","Contact","ugo.azoulay@gmail.com"],["🌍","Site web","mobio.app"]].map(function(item, i, arr) {
                 return (
                   <div key={item[1]} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderBottom: i < arr.length - 1 ? "1px solid " + T.bsub : "none" }}>
                     <span style={{ fontSize: 16 }}>{item[0]}</span>
@@ -2041,7 +2184,7 @@ function App() {
       <BottomNav T={T} tab={tab} setTab={setTab} />
       {toast    && <Toast T={T} notif={toast} onClose={function() { setToast(null); }} />}
       {showNotifs && <NotifPanel T={T} dark={dark} notifs={notifs} onClose={function() { setShowNotifs(false); }} onMarkAll={markAllRead} onRead={markRead} />}
-      {vehicle  && <Detail T={T} v={vehicle}      onClose={function() { setVehicle(null); }} />}
+      {vehicle  && <Detail T={T} v={vehicle} fromAddr={fromAddr} toAddr={toAddr} onClose={function() { setVehicle(null); }} />}
       {favModal && <FavModal T={T} fav={favModal.fav} onSave={saveFav} onClose={function() { setFavModal(null); }} />}
     </div>
   );

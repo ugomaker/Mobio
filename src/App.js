@@ -707,7 +707,6 @@ function useGBFS(lat, lng) {
 var JCDECAUX_CITIES = {
   lyon:       { contract: "lyon",       name: "Lyon",       color: "#e2001a",  service: "Velo'v",      unlock: 0, pMin: 0.10, freeMins: 30 },
   bordeaux:   { contract: "bordeaux",   name: "Bordeaux",   color: "#6f3996", service: "V3",           unlock: 0, pMin: 0.10, freeMins: 30 },
-  marseille:  { contract: "marseille",  name: "Marseille",  color: "#009fe3", service: "Le Velo",      unlock: 0, pMin: 0.10, freeMins: 30 },
   toulouse:   { contract: "toulouse",   name: "Toulouse",   color: "#f0a500", service: "VeloToulouse", unlock: 0, pMin: 0.10, freeMins: 30 },
   nantes:     { contract: "nantes",     name: "Nantes",     color: "#00a550", service: "Bicloo",       unlock: 0, pMin: 0.10, freeMins: 30 },
   lille:      { contract: "lille",      name: "Lille",      color: "#e2001a", service: "V'Lille",     unlock: 0, pMin: 0.10, freeMins: 30 },
@@ -717,6 +716,14 @@ var JCDECAUX_CITIES = {
   amiens:     { contract: "amiens",     name: "Amiens",     color: "#0072b9", service: "Velam",        unlock: 0, pMin: 0.10, freeMins: 30 },
   nancy:      { contract: "nancy",      name: "Nancy",      color: "#e2001a", service: "velo+",        unlock: 0, pMin: 0.10, freeMins: 30 },
   creteil:    { contract: "creteil",    name: "Créteil",    color: "#0072b9" },
+};
+
+// Marseille : JCDecaux a perdu le contrat en 2023 — "Le vélo" est désormais opéré par Fifteen + Inurba
+var FIFTEEN_CITIES = {
+  marseille: { name: "Marseille", color: "#009fe3", service: "Le vélo",
+    base: "https://api.omega.fifteen.eu/gbfs/2.2/marseille/en/",
+    key: "MjE0ZDNmMGEtNGFkZS00M2FlLWFmMWItZGNhOTZhMWQyYzM2",
+    unlock: 0, pMin: 0.10, freeMins: 30 },
 };
 
 // Détecte la ville selon les coordonnées GPS
@@ -809,6 +816,50 @@ function useJCDecaux(lat, lng) {
   return { stations: stations, loading: loading, cityName: cityName };
 }
 
+// Marseille — "Le vélo" via Fifteen (depuis 2023, remplace JCDecaux)
+function useFifteenStations(lat, lng) {
+  var [stations, setStations] = useState([]);
+  var [loading,  setLoading]  = useState(false);
+  var [cityName, setCityName] = useState(null);
+
+  useEffect(function() {
+    if (!lat || !lng) { setStations([]); return; }
+    var cityId = detectCity(lat, lng);
+    var city = cityId ? FIFTEEN_CITIES[cityId] : null;
+    if (!city) { setStations([]); return; }
+    setCityName(city.name);
+    setLoading(true);
+
+    Promise.all([
+      fetch(GBFS_PROXY + encodeURIComponent(city.base + "station_information.json?&key=" + city.key)).then(function(r) { return r.json(); }),
+      fetch(GBFS_PROXY + encodeURIComponent(city.base + "station_status.json?&key=" + city.key)).then(function(r) { return r.json(); }),
+    ]).then(function(results) {
+      var info = results[0].data.stations;
+      var status = results[1].data.stations;
+      var statusById = {};
+      status.forEach(function(s) { statusById[s.station_id] = s; });
+
+      var withDist = info.map(function(s) {
+        var st = statusById[s.station_id] || {};
+        var dist = Math.round(haversine(lat, lng, s.lat, s.lon) * 1000);
+        return {
+          id: s.station_id, name: s.name, dist: dist, lat: s.lat, lng: s.lon,
+          mechaDispo: st.num_bikes_available || 0, elecDispo: 0,
+          totalDispo: st.num_bikes_available || 0, docks: st.num_docks_available || 0,
+          city: city,
+        };
+      }).filter(function(s) { return s.dist < 1500; })
+        .sort(function(a, b) { return a.dist - b.dist; })
+        .slice(0, 3);
+
+      setStations(withDist);
+      setLoading(false);
+    }).catch(function() { setLoading(false); });
+  }, [lat, lng]);
+
+  return { stations: stations, loading: loading, cityName: cityName };
+}
+
 
 // ── Compare ────────────────────────────────────────────────────────────────
 function Compare(props) {
@@ -831,6 +882,7 @@ function Compare(props) {
   var velib = useVelib(isInParis ? from.lat : null, isInParis ? from.lng : null);
   var gbfs  = useGBFS(from.lat, from.lng);
   var jcdecaux = useJCDecaux(from.lat, from.lng);
+  var fifteen  = useFifteenStations(from.lat, from.lng);
 
   var km   = to ? Math.max(0.5, haversine(from.lat, from.lng, to.lat, to.lng) * 1.35) : 5.2;
   var mins = Math.round(km / 0.38);
@@ -900,6 +952,29 @@ function Compare(props) {
         type: "station",
         subtype: st.elecDispo > 0 ? "Électrique" : "Mécanique",
         bat: null, unlock: 0, pMin: st.elecDispo > 0 ? 0.17 : 0,
+        price: price,
+        dist: st.dist,
+        real: true,
+        mechaDispo: st.mechaDispo,
+        elecDispo: st.elecDispo,
+        totalDispo: st.totalDispo,
+        stationName: st.name,
+        walkMins: walkMins,
+      };
+    })
+  ).concat(
+    jcdecaux.stations.concat(fifteen.stations).slice(0, 2).map(function(st) {
+      var walkMins = Math.round(st.dist / 80);
+      var rideMins = scMins;
+      var price = rideMins > st.city.freeMins ? Math.round((rideMins - st.city.freeMins) * st.city.pMin * 100) / 100 : 0;
+      return {
+        id: "station_" + st.city.name + "_" + st.id,
+        name: st.city.service || st.city.name,
+        stationLabel: "Vélo en station",
+        short: "Vb", color: st.city.color, tc: "#fff",
+        type: "station",
+        subtype: "Mécanique",
+        bat: null, unlock: 0, pMin: st.city.pMin,
         price: price,
         dist: st.dist,
         real: true,
@@ -1429,6 +1504,39 @@ function MapView(props) {
         })
         .catch(function() {});
       }
+    }
+
+    // Marseille — "Le vélo" via Fifteen (JCDecaux a perdu le contrat en 2023)
+    var cityIdF = detectCity(lat, lng);
+    var cityF = cityIdF ? FIFTEEN_CITIES[cityIdF] : null;
+    if (cityF) {
+      Promise.all([
+        fetch(GBFS_PROXY + encodeURIComponent(cityF.base + "station_information.json?&key=" + cityF.key)).then(function(r) { return r.json(); }),
+        fetch(GBFS_PROXY + encodeURIComponent(cityF.base + "station_status.json?&key=" + cityF.key)).then(function(r) { return r.json(); }),
+      ]).then(function(results) {
+        if (!map) return;
+        var info = results[0].data.stations;
+        var status = results[1].data.stations;
+        var statusById = {};
+        status.forEach(function(s) { statusById[s.station_id] = s; });
+
+        info.filter(function(s) {
+          return haversine(lat, lng, s.lat, s.lon) * 1000 < 1000;
+        }).slice(0, 8).forEach(function(s) {
+          var st = statusById[s.station_id] || {};
+          var avail = st.num_bikes_available || 0;
+          if (avail === 0) return;
+          var el = document.createElement("div");
+          el.style.cssText = "display:inline-block;";
+          var inner = document.createElement("div");
+          inner.style.cssText = "background:" + cityF.color + ";color:white;padding:3px 7px;border-radius:10px;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap;";
+          inner.textContent = "🚲 " + avail;
+          el.appendChild(inner);
+          new mapboxgl.Marker({ element: el, anchor: "center" })
+            .setLngLat([s.lon, s.lat])
+            .addTo(map);
+        });
+      }).catch(function() {});
     }
   }
 

@@ -1,4 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// ── Supabase (authentification) ─────────────────────────────────────────────
+var SUPABASE_URL = "https://ylxwecvaudacpahonosy.supabase.co";
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlseHdlY3ZhdWRhY3BhaG9ub3N5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3NDM3NzUsImV4cCI6MjA5ODMxOTc3NX0.LXcLDyTrwureWtJJdxP7vlS0ptT8vdiotePT8OIg0as";
+var supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 // ── Thèmes ─────────────────────────────────────────────────────────────────
 const LIGHT = {
@@ -19,7 +26,7 @@ const PLATFORMS = {
   uber:   { name: "Uber",   short: "Ub", color: "#000",    tc: "#fff", base: 1.5, pKm: 1.20, pMin: 0.22, stars: 4.6, appUrl: "https://apps.apple.com/fr/app/uber-demandez-une-course/id368677368", categories: [{label:"UberX", seats:4},{label:"Uber Comfort", seats:4},{label:"Uber XL", seats:6},{label:"Uber Van", seats:7}] },
   bolt:   { name: "Bolt",   short: "Bt", color: "#34d186", tc: "#fff", base: 1.1, pKm: 0.95, pMin: 0.18, stars: 4.8, appUrl: "https://apps.apple.com/fr/app/bolt-commandez-une-course/id675033630", categories: [{label:"Bolt Standard", seats:4},{label:"Bolt XL", seats:6}] },
   heetch: { name: "Heetch", short: "He", color: "#ff1c5b", tc: "#fff", base: 1.3, pKm: 1.05, pMin: 0.20, stars: 4.7, appUrl: "https://apps.apple.com/fr/app/heetch-vtc/id899361275", categories: [{label:"Heetch", seats:4},{label:"Heetch XL", seats:6}] },
-  marcel: { name: "Marcel", short: "Ma", color: "#1a1a2e", tc: "#fff", base: 2.0, pKm: 1.45, pMin: 0.28, stars: 4.9, appUrl: "https://apps.apple.com/fr/app/marcel-vtc/id1043720189", categories: [{label:"Marcel Berline", seats:4},{label:"Marcel Van", seats:7}] },
+  marcel: { name: "Marcel", short: "Ma", color: "#6b6b76", tc: "#fff", base: 2.0, pKm: 1.45, pMin: 0.28, stars: 4.9, appUrl: "https://apps.apple.com/fr/app/marcel-vtc/id1043720189", categories: [{label:"Marcel Berline", seats:4},{label:"Marcel Van", seats:7}] },
 };
 // Scooters partagés (permis requis, à deux places, ~50cm3 électrique)
 const MOPEDS = {
@@ -38,9 +45,15 @@ const MOPEDS = {
 const SCOOTERS = {
   lime_sc:  { name: "Lime",   short: "Lm", color: "#00c853", tc: "#fff", unlock: 1.0, pMin: 0.25, type: "scooter", label: "Trottinette",  bat: 78,  appUrl: "https://apps.apple.com/fr/app/lime/id1199780189" },
   lime_bk:  { name: "Lime",   short: "Lm", color: "#00c853", tc: "#fff", unlock: 1.0, pMin: 0.20, type: "bike",    label: "Vélo libre",   bat: 65,  appUrl: "https://apps.apple.com/fr/app/lime/id1199780189" },
-  dott:     { name: "Dott",   short: "Dt", color: "#ff4a17", tc: "#fff", unlock: 1.0, pMin: 0.20, type: "scooter", label: "Trottinette",  bat: 91,  appUrl: "https://apps.apple.com/fr/app/dott/id1434242987" },
+  dott_sc:  { name: "Dott",   short: "Dt", color: "#ff4a17", tc: "#fff", unlock: 1.0, pMin: 0.20, type: "scooter", label: "Trottinette",  bat: 91,  appUrl: "https://apps.apple.com/fr/app/dott/id1434242987" },
+  dott_bk:  { name: "Dott",   short: "Dt", color: "#ff4a17", tc: "#fff", unlock: 1.0, pMin: 0.16, type: "bike",    label: "Vélo libre",   bat: 88,  appUrl: "https://apps.apple.com/fr/app/dott/id1434242987" },
   bird:     { name: "Bird",   short: "Bd", color: "#111111", tc: "#fff", unlock: 1.0, pMin: 0.26, type: "scooter", label: "Trottinette",  bat: 60,  appUrl: "https://apps.apple.com/fr/app/bird/id1260842311" },
-  voi:      { name: "Voi",    short: "Vo", color: "#ff3366", tc: "#fff", unlock: 1.0, pMin: 0.23, type: "scooter", label: "Trottinette",  bat: 72,  appUrl: "https://apps.apple.com/fr/app/voi-scooters/id1445268803" },
+  voi:       { name: "Voi",    short: "Vo", color: "#ff3366", tc: "#fff", unlock: 1.0, pMin: 0.23, type: "scooter", label: "Trottinette",  bat: 72,  appUrl: "https://apps.apple.com/fr/app/voi-scooters/id1445268803" },
+  ecovelo_sc:{ name: "EcoVelo", short: "Ec", color: "#2d9e47", tc: "#fff", unlock: 1.0, pMin: 0.19, type: "scooter", label: "Trottinette", bat: null, appUrl: "https://apps.apple.com/fr/app/ecovelo/id1548620370" },
+  ecovelo_bk:{ name: "EcoVelo", short: "Ec", color: "#2d9e47", tc: "#fff", unlock: 0,   pMin: 0.10, type: "bike",    label: "Vélo libre",   bat: null, appUrl: "https://apps.apple.com/fr/app/ecovelo/id1548620370" },
+  yego_moped:{ name: "Yego",   short: "Yg", color: "#FF6B00", tc: "#fff", unlock: 0,   pMin: 0.32, type: "moped",   label: "Scooter élec.", bat: null, appUrl: "https://apps.apple.com/fr/app/yego-mobility/id1181020675" },
+  pony_sc:  { name: "Pony",   short: "Po", color: "#f5a623", tc: "#fff", unlock: 1.0, pMin: 0.22, type: "scooter", label: "Trottinette",  bat: 75,  appUrl: "https://apps.apple.com/fr/app/pony/id1488290696" },
+  pony_bk:  { name: "Pony",   short: "Po", color: "#f5a623", tc: "#fff", unlock: 1.0, pMin: 0.18, type: "bike",    label: "Vélo libre",   bat: 80,  appUrl: "https://apps.apple.com/fr/app/pony/id1488290696" },
   velib:    { name: "Vélib'", short: "Vb", color: "#0072b9", tc: "#fff", unlock: 0,   pMin: 0.17, type: "station", label: "Vélo en station", bat: null },
 };
 const HISTORY_DATA = [
@@ -134,14 +147,15 @@ var CGU_TEXT = [
 
 var PRIVACY_TEXT = [
   { title: "1. Responsable du traitement", content: "Le responsable du traitement des données est Ugo Azoulay, auto-entrepreneur, domicilié à 207 rue du Rouet, 13008 Marseille, France. Contact DPO : ugo.azoulay@gmail.com" },
-  { title: "2. Données collectées", content: "Mobio collecte les données suivantes : données de localisation (avec votre consentement), adresses de départ et d'arrivée saisies, adresses favorites enregistrées, historique des trajets consultés, préférences de l'application. Aucune donnée bancaire n'est collectée directement par Mobio." },
-  { title: "3. Finalités du traitement", content: "Vos données sont utilisées pour : fournir le service de comparaison de prix, améliorer les recommandations et l'expérience utilisateur, envoyer des notifications (avec votre consentement), établir des statistiques d'usage anonymisées." },
-  { title: "4. Base légale", content: "Le traitement de vos données est fondé sur : votre consentement (localisation, notifications), l'exécution du contrat (fourniture du service), l'intérêt légitime (amélioration du service, sécurité)." },
-  { title: "5. Durée de conservation", content: "Vos données sont conservées pendant toute la durée de votre utilisation de l'application. L'historique des trajets est conservé 12 mois. En cas de suppression du compte, vos données sont effacées sous 30 jours." },
-  { title: "6. Vos droits (RGPD)", content: "Conformément au RGPD, vous disposez des droits suivants : droit d'accès à vos données, droit de rectification, droit à l'effacement (droit à l'oubli), droit à la portabilité, droit d'opposition au traitement. Pour exercer ces droits, contactez : ugo.azoulay@gmail.com. Vous pouvez également adresser une réclamation à la CNIL (www.cnil.fr)." },
-  { title: "7. Partage des données", content: "Mobio ne vend jamais vos données personnelles à des tiers. Vos données peuvent être partagées avec : Mapbox (cartographie, politique de confidentialité sur mapbox.com), les plateformes VTC/mobilité uniquement lors d'un clic de redirection vers leur application." },
-  { title: "8. Cookies", content: "Mobio utilise des cookies techniques nécessaires au fonctionnement de l'application et des cookies de mesure d'audience anonymisée. Vous pouvez gérer vos préférences cookies depuis les paramètres de l'application." },
-  { title: "Dernière mise à jour", content: "Juin 2026" },
+  { title: "2. Données collectées", content: "Mobio collecte les données suivantes : données de localisation (avec votre consentement), adresses de départ et d'arrivée saisies, adresses favorites enregistrées localement, historique des trajets (stocké localement sur votre appareil), préférences de l'application. Si vous créez un compte : adresse email, mot de passe (chiffré), prénom, nom, date de naissance, et optionnellement une photo de profil. Aucune donnée bancaire n'est collectée directement par Mobio." },
+  { title: "3. Finalités du traitement", content: "Vos données sont utilisées pour : fournir le service de comparaison de prix, gérer votre compte utilisateur (authentification sécurisée), stocker votre photo de profil, améliorer les recommandations et l'expérience utilisateur, établir des statistiques d'usage anonymisées." },
+  { title: "4. Base légale", content: "Le traitement de vos données est fondé sur : votre consentement (localisation, création de compte, photo de profil), l'exécution du contrat (fourniture du service), l'intérêt légitime (amélioration du service, sécurité)." },
+  { title: "5. Sous-traitants et hébergement", content: "Mobio fait appel aux sous-traitants suivants : Supabase Inc. (authentification et stockage sécurisé des comptes utilisateurs, hébergé en Europe — voir supabase.com/privacy), Mapbox Inc. (cartographie — voir mapbox.com/legal/privacy), Vercel Inc. (infrastructure technique). Ces sous-traitants sont soumis à des obligations contractuelles conformes au RGPD." },
+  { title: "6. Durée de conservation", content: "Vos données de compte sont conservées tant que votre compte est actif. L'historique des trajets est conservé localement sur votre appareil et effacé à la désinstallation. En cas de suppression du compte, vos données (compte, photo de profil) sont effacées de nos serveurs sous 30 jours." },
+  { title: "7. Vos droits (RGPD)", content: "Conformément au RGPD, vous disposez des droits suivants : droit d'accès à vos données, droit de rectification, droit à l'effacement (droit à l'oubli), droit à la portabilité, droit d'opposition au traitement. Pour exercer ces droits, contactez : ugo.azoulay@gmail.com. Vous pouvez également adresser une réclamation à la CNIL (www.cnil.fr)." },
+  { title: "8. Partage des données", content: "Mobio ne vend jamais vos données personnelles à des tiers. Aucune donnée n'est transmise aux plateformes VTC/mobilité sans action explicite de votre part (clic de redirection)." },
+  { title: "9. Cookies", content: "Mobio utilise uniquement des cookies techniques nécessaires au fonctionnement de l'application (session, préférences). Aucun cookie publicitaire ou de tracking tiers n'est utilisé." },
+  { title: "Dernière mise à jour", content: "Juillet 2026" },
 ];
 
 // ── Utilitaires ────────────────────────────────────────────────────────────
@@ -163,6 +177,18 @@ function haversine(la1, ln1, la2, ln2) {
   return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
 }
 
+// Distance précise en mètres (sans arrondi intermédiaire au 0,1km) — pour les distances courtes
+// à pied vers une trottinette/vélo/station, où haversine() perdrait toute précision sous 100m.
+function distMeters(la1, ln1, la2, ln2) {
+  var R = 6371000;
+  var dLat = (la2 - la1) * Math.PI / 180;
+  var dLng = (ln2 - ln1) * Math.PI / 180;
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+        + Math.cos(la1 * Math.PI / 180) * Math.cos(la2 * Math.PI / 180)
+        * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
 function calcVtcPrice(plId, km, mins) {
   var p = PLATFORMS[plId];
   return Math.round((p.base + km * p.pKm + mins * p.pMin) * 100) / 100;
@@ -176,6 +202,46 @@ function calcMopedPrice(mopedId, km, mins) {
 function calcScPrice(scId, mins) {
   var s = SCOOTERS[scId];
   return Math.round((s.unlock + mins * s.pMin) * 100) / 100;
+}
+
+// Génère un identifiant de session pour la Search Box API (regroupe suggest+retrieve pour la facturation)
+function uuidv4() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0;
+    var v = c === "x" ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+// ── Suivi réel des trajets (stocké localement, pour calculer économies et CO2) ─
+// Référence : une voiture thermique moyenne émet ~218g de CO2/km (Base Empreinte ADEME)
+var CO2_PAR_KM_VOITURE = 218; // grammes
+var TRIPS_STORAGE_KEY = "mobio_trips_v1";
+
+function loadTrips() {
+  try {
+    var raw = localStorage.getItem(TRIPS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+
+function logTrip(trip) {
+  try {
+    var trips = loadTrips();
+    trips.push(Object.assign({ date: Date.now() }, trip));
+    localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(trips));
+  } catch (e) {}
+}
+
+// Calcule les vraies stats à partir de l'historique réel des trajets réservés
+function getTripStats() {
+  var trips = loadTrips();
+  var count = trips.length;
+  var totalSaved = trips.reduce(function(sum, t) { return sum + (t.saved || 0); }, 0);
+  var totalSpent = trips.reduce(function(sum, t) { return sum + (t.price || 0); }, 0);
+  // Le CO2 évité ne s'applique qu'aux trajets en micro-mobilité/scooter (substituts réels à une voiture) — pas aux VTC, qui restent une voiture
+  var totalCo2g = trips.reduce(function(sum, t) { return sum + (t.co2 || 0); }, 0);
+  return { count: count, totalSaved: totalSaved, totalSpent: totalSpent, totalCo2Kg: totalCo2g / 1000 };
 }
 
 function filterPlaces(query) {
@@ -293,6 +359,13 @@ function AddrInput(props) {
   var [loading, setLoading] = useState(false);
   var wrapRef   = useRef(null);
   var timerRef  = useRef(null);
+  var sessionTokenRef = useRef(uuidv4());
+
+  // Mettre à jour le champ quand la position GPS change automatiquement
+  // (ex: géolocalisation initiale, déplacement détecté)
+  useEffect(function() {
+    if (props.value && !open) setQuery(props.value);
+  }, [props.value]);
 
   useEffect(function() {
     function handleClick(e) {
@@ -316,20 +389,22 @@ function AddrInput(props) {
     clearTimeout(timerRef.current);
     setLoading(true);
     timerRef.current = setTimeout(function() {
+      // Search Box API — gère à la fois les adresses ET les lieux/enseignes (IKEA, McDonald's...),
+      // contrairement à l'ancienne Geocoding v5 qui n'a plus du tout de données POI.
       fetch(
-        "https://api.mapbox.com/geocoding/v5/mapbox.places/" +
+        "https://api.mapbox.com/search/searchbox/v1/suggest?q=" +
         encodeURIComponent(val) +
-        ".json?access_token=" + MAPBOX_TOKEN +
-        "&language=fr&limit=6&types=address,place,poi,locality,neighborhood"
+        "&access_token=" + MAPBOX_TOKEN +
+        "&session_token=" + sessionTokenRef.current +
+        "&language=fr&limit=6&country=fr"
       )
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (!data.features) { setSuggestions([]); return; }
-        var results = data.features.map(function(f) {
+        if (!data.suggestions) { setSuggestions([]); setLoading(false); return; }
+        var results = data.suggestions.map(function(s) {
           return {
-            label: f.place_name,
-            lat:   f.center[1],
-            lng:   f.center[0],
+            label: s.name + (s.place_formatted ? ", " + s.place_formatted : ""),
+            mapboxId: s.mapbox_id,
           };
         });
         setSuggestions(results);
@@ -357,11 +432,30 @@ function AddrInput(props) {
 
   function handleSelect(place) {
     setQuery(place.label);
-    props.onSelect(place);
     setOpen(false);
     setSuggestions([]);
     // Fermer le clavier
     if (document.activeElement) document.activeElement.blur();
+
+    // Les suggestions de la Search Box API n'ont pas directement lat/lng —
+    // il faut un appel /retrieve séparé pour récupérer les coordonnées exactes.
+    if (place.mapboxId) {
+      fetch(
+        "https://api.mapbox.com/search/searchbox/v1/retrieve/" + place.mapboxId +
+        "?access_token=" + MAPBOX_TOKEN + "&session_token=" + sessionTokenRef.current
+      )
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var f = data.features && data.features[0];
+        if (!f) return;
+        props.onSelect({ label: place.label, lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] });
+        sessionTokenRef.current = uuidv4(); // nouvelle session pour la prochaine recherche
+      })
+      .catch(function() {});
+    } else {
+      // Lieu du fallback local (déjà avec lat/lng directement)
+      props.onSelect(place);
+    }
   }
 
   function handleClear() {
@@ -398,6 +492,16 @@ function AddrInput(props) {
       {open && loading && (
         <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 200, background: T.card, borderRadius: 12, border: "1px solid " + T.border, padding: "12px 14px", fontSize: 12, color: T.muted, fontFamily: "'DM Sans',sans-serif", textAlign: "center" }}>
           Recherche en cours…
+        </div>
+      )}
+      {open && !loading && (!MAPBOX_TOKEN || MAPBOX_TOKEN === "COLLE_TON_TOKEN_ICI") && query.length >= 2 && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 200, background: "#fff3cd", borderRadius: 12, border: "1px solid #ffc107", padding: "10px 14px", fontSize: 11, color: "#854f0b", fontFamily: "'DM Sans',sans-serif" }}>
+          ⚠️ Token Mapbox manquant — seuls quelques monuments parisiens sont proposés. Vérifie que <code>MAPBOX_TOKEN</code> est bien rempli en haut du fichier.
+        </div>
+      )}
+      {open && !loading && suggestions.length === 0 && query.length >= 2 && MAPBOX_TOKEN && MAPBOX_TOKEN !== "COLLE_TON_TOKEN_ICI" && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 200, background: T.card, borderRadius: 12, border: "1px solid " + T.border, padding: "12px 14px", fontSize: 12, color: T.muted, fontFamily: "'DM Sans',sans-serif", textAlign: "center" }}>
+          Aucun résultat pour "{query}"
         </div>
       )}
       {open && !loading && suggestions.length > 0 && (
@@ -584,7 +688,7 @@ function useVelib(lat, lng) {
           var coords = s.coordonnees_geo;
           var sLat = coords ? coords.lat : lat;
           var sLng = coords ? coords.lon : lng;
-          var dist = Math.round(haversine(lat, lng, sLat, sLng) * 1000);
+          var dist = distMeters(lat, lng, sLat, sLng);
           return {
             id:        s.stationcode,
             name:      s.name,
@@ -618,7 +722,7 @@ var GBFS_PROXY = "https://mobio-proxy.vercel.app/api/gbfs?url=";
 
 // Opérateurs avec un schéma d'URL prévisible par ville (vérifié via le catalogue officiel MobilityData systems.csv)
 var GBFS_OPERATORS_TEMPLATED = [
-  { id: "lime", urlTpl: "https://data.lime.bike/api/partners/v2/gbfs/{city}/free_bike_status.json" },
+  { id: "lime", urlTpl: "https://data.lime.bike/api/partners/v2/gbfs/{city}/gbfs.json" },
   { id: "dott", urlTpl: "https://gbfs.api.ridedott.com/public/v2/{city}/gbfs.json" },
   { id: "bird", urlTpl: "https://mds.bird.co/gbfs/v2/public/{city}/gbfs.json" },
 ];
@@ -626,26 +730,78 @@ var GBFS_OPERATORS_TEMPLATED = [
 // Voi utilise un identifiant unique par déploiement (pas de schéma par ville) — on doit le confirmer ville par ville
 var GBFS_VOI_URLS = {
   marseille: "https://api.voiapp.io/gbfs/fr/6bb6b5dc-1cda-4da7-9216-d3023a0bc54a/v2/66/gbfs.json",
+  grenoble:  "https://api.voiapp.io/gbfs/fr/6bb6b5dc-1cda-4da7-9216-d3023a0bc54a/v2/358/gbfs.json",
 };
 
+// Dott utilise parfois des URLs spécifiques par ville (via portails métro locaux)
+var GBFS_DOTT_OVERRIDE_URLS = {
+  grenoble: "https://data.mobilites-m.fr/api/gbfs/dott_grenoble/gbfs",
+};
+
+// Pony aussi a une URL unique par ville — confirmé officiellement à Bordeaux (contrat métropole nov. 2025-2029)
+var GBFS_PONY_URLS = {
+  bordeaux: "https://proxy.transport.data.gouv.fr/resource/pony-bordeaux-gbfs/gbfs.json",
+  nice:     "https://proxy.transport.data.gouv.fr/resource/pony-nice-gbfs/gbfs.json",
+  grenoble: "https://proxy.transport.data.gouv.fr/resource/grenoble-velos-a-assistance-electrique-en-libre-service/gbfs.json",
+};
+
+// Yego (scooters électriques) — URL officielle par ville, confirmée sur transport.data.gouv.fr
+var GBFS_YEGO_URLS = {
+  bordeaux: "https://services.rideyego.com/gbfs/2-2/bordeaux/fr/gbfs",
+  toulouse: "https://services.rideyego.com/gbfs/2-2/toulouse/fr/gbfs",
+  nice:     "https://services.rideyego.com/gbfs/2-2/nice/fr/gbfs",
+};
+
+// Récupère la correspondance vehicle_type_id → form_factor ("bicycle" ou "scooter")
+// depuis vehicle_types.json — c'est le SEUL moyen fiable de savoir si un véhicule
+// GBFS est un vélo ou une trottinette (le champ n'est jamais directement sur le véhicule).
+function fetchVehicleTypes(vehicleTypesUrl) {
+  if (!vehicleTypesUrl) return Promise.resolve({});
+  return fetch(GBFS_PROXY + encodeURIComponent(vehicleTypesUrl))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var types = data && data.data && data.data.vehicle_types;
+      if (!Array.isArray(types)) return {};
+      var map = {};
+      types.forEach(function(t) { map[t.vehicle_type_id] = t.form_factor; });
+      return map;
+    })
+    .catch(function() { return {}; });
+}
+
 // Récupère les vélos/trottinettes depuis une URL GBFS, qu'elle soit un fichier
-// "free_bike_status.json" direct ou un fichier de découverte "gbfs.json"
+// "free_bike_status.json"/"vehicle_status.json" direct ou un fichier de découverte "gbfs.json".
+// Chaque véhicule renvoyé porte un champ "formFactor" ("bicycle"/"scooter"/null si inconnu).
 function fetchGbfsBikes(entryUrl) {
   return fetch(GBFS_PROXY + encodeURIComponent(entryUrl))
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data && data.data && Array.isArray(data.data.bikes)) {
-        return data.data.bikes; // déjà un free_bike_status.json
+      // Cas direct : on nous a donné le fichier des véhicules sans passer par la découverte —
+      // on n'a alors aucun moyen de récupérer vehicle_types.json, donc pas de formFactor fiable.
+      if (data && data.data) {
+        if (Array.isArray(data.data.bikes)) return data.data.bikes.map(function(b) { return Object.assign({}, b, { formFactor: null }); });
+        if (Array.isArray(data.data.vehicles)) return data.data.vehicles.map(function(b) { return Object.assign({}, b, { formFactor: null }); });
       }
-      // Sinon c'est un fichier de découverte gbfs.json — trouver le sous-flux free_bike_status
-      var feeds = (data && data.data && (data.data.en || data.data.fr || Object.values(data.data || {})[0]));
+      // Fichier de découverte gbfs.json — trouver les sous-flux véhicules ET types de véhicules.
+      // GBFS v2 regroupe les flux par langue (data.en.feeds), GBFS v3 les met directement (data.feeds).
+      var feeds = data && data.data && (data.data.feeds ? data.data : (data.data.en || data.data.fr || Object.values(data.data)[0]));
       var feedList = feeds ? feeds.feeds : null;
       if (!feedList) return [];
-      var match = feedList.filter(function(f) { return f.name === "free_bike_status"; })[0];
+      var match = feedList.filter(function(f) { return f.name === "free_bike_status" || f.name === "vehicle_status"; })[0];
       if (!match) return [];
-      return fetch(GBFS_PROXY + encodeURIComponent(match.url))
-        .then(function(r2) { return r2.json(); })
-        .then(function(data2) { return (data2 && data2.data && data2.data.bikes) || []; });
+      var typesMatch = feedList.filter(function(f) { return f.name === "vehicle_types"; })[0];
+
+      return Promise.all([
+        fetch(GBFS_PROXY + encodeURIComponent(match.url)).then(function(r2) { return r2.json(); }),
+        fetchVehicleTypes(typesMatch ? typesMatch.url : null),
+      ]).then(function(results) {
+        var data2 = results[0];
+        var typeMap = results[1];
+        var vehicles = (data2 && data2.data && (data2.data.bikes || data2.data.vehicles)) || [];
+        return vehicles.map(function(b) {
+          return Object.assign({}, b, { formFactor: typeMap[b.vehicle_type_id] || null });
+        });
+      });
     });
 }
 
@@ -661,9 +817,15 @@ function useGBFS(lat, lng) {
 
     setLoading(true);
     var sources = GBFS_OPERATORS_TEMPLATED.map(function(op) {
+      // Utiliser l'URL spécifique si disponible (ex: Dott Grenoble via portail métro)
+      if (op.id === "dott" && GBFS_DOTT_OVERRIDE_URLS[cityId]) {
+        return { id: "dott", url: GBFS_DOTT_OVERRIDE_URLS[cityId] };
+      }
       return { id: op.id, url: op.urlTpl.replace("{city}", cityId) };
     });
     if (GBFS_VOI_URLS[cityId]) sources.push({ id: "voi", url: GBFS_VOI_URLS[cityId] });
+    if (GBFS_PONY_URLS[cityId]) sources.push({ id: "pony", url: GBFS_PONY_URLS[cityId] });
+    if (GBFS_YEGO_URLS[cityId]) sources.push({ id: "yego_moped", url: GBFS_YEGO_URLS[cityId] });
 
     var results = {};
     var pending = sources.length;
@@ -683,12 +845,12 @@ function useGBFS(lat, lng) {
           var available = bikes.filter(function(b) { return !b.is_reserved && !b.is_disabled; });
           var nearby = available.filter(function(b) {
             if (!b.lat || !b.lon) return false;
-            return haversine(lat, lng, b.lat, b.lon) * 1000 < 800;
+            return distMeters(lat, lng, b.lat, b.lon) < (window.mobioRadius || 800);
           }).map(function(b) {
-            var dist = Math.round(haversine(lat, lng, b.lat, b.lon) * 1000);
-            var isBike = (b.vehicle_type || "").toLowerCase().indexOf("bike") >= 0 || (b.vehicle_type_id || "") === "3";
-            var bat = b.current_range_meters ? Math.min(100, Math.round(b.current_range_meters / 400 * 100) / 100 * 100) : null;
-            return { id: b.bike_id, dist: dist, bat: bat, isBike: isBike, lat: b.lat, lng: b.lon, rentalUris: b.rental_uris || null };
+            var dist = distMeters(lat, lng, b.lat, b.lon);
+            var isBike = b.formFactor === "bicycle" || b.formFactor === "cargo_bicycle";
+            return { id: b.bike_id || b.vehicle_id, dist: dist, isBike: isBike, lat: b.lat, lng: b.lon, rentalUris: b.rental_uris || null,
+              rangeKm: b.current_range_meters ? Math.round(b.current_range_meters / 100) / 10 : null };
           }).sort(function(a, b) { return a.dist - b.dist; });
 
           if (nearby.length > 0) results[src.id] = nearby;
@@ -705,25 +867,135 @@ function useGBFS(lat, lng) {
 // ── JCDecaux vélos en libre-service (toutes villes françaises) ─────────────
 // Paris géré par Smovengo (Vélib') — pas JCDecaux
 var JCDECAUX_CITIES = {
-  lyon:       { contract: "lyon",       name: "Lyon",       color: "#e2001a",  service: "Velo'v",      unlock: 0, pMin: 0.10, freeMins: 30 },
-  bordeaux:   { contract: "bordeaux",   name: "Bordeaux",   color: "#6f3996", service: "V3",           unlock: 0, pMin: 0.10, freeMins: 30 },
   toulouse:   { contract: "toulouse",   name: "Toulouse",   color: "#f0a500", service: "VeloToulouse", unlock: 0, pMin: 0.10, freeMins: 30 },
-  nantes:     { contract: "nantes",     name: "Nantes",     color: "#00a550", service: "Bicloo",       unlock: 0, pMin: 0.10, freeMins: 30 },
-  lille:      { contract: "lille",      name: "Lille",      color: "#e2001a", service: "V'Lille",     unlock: 0, pMin: 0.10, freeMins: 30 },
-  rennes:     { contract: "rennes",     name: "Rennes",     color: "#003189", service: "Star",         unlock: 0, pMin: 0.10, freeMins: 30 },
-  strasbourg: { contract: "strasbourg", name: "Strasbourg", color: "#e2001a", service: "Velhop",      unlock: 0, pMin: 0.10, freeMins: 30 },
   rouen:      { contract: "rouen",      name: "Rouen",      color: "#009fe3", service: "Cy'clic",     unlock: 0, pMin: 0.10, freeMins: 30 },
   amiens:     { contract: "amiens",     name: "Amiens",     color: "#0072b9", service: "Velam",        unlock: 0, pMin: 0.10, freeMins: 30 },
   nancy:      { contract: "nancy",      name: "Nancy",      color: "#e2001a", service: "velo+",        unlock: 0, pMin: 0.10, freeMins: 30 },
   creteil:    { contract: "creteil",    name: "Créteil",    color: "#0072b9" },
 };
 
+// Bordeaux : "Le Vélo par TBM" (ex-VCub) — le flux GBFS via Mecatran a des sous-flux
+// station_information/station_status qui renvoient 401 (problème côté Bordeaux Métropole).
+// On utilise directement leur portail OpenData officiel à la place (même techno Opendatasoft que Paris/Vélib').
+var MECATRAN_CITIES = {
+  bordeaux: { name: "Bordeaux", color: "#6f3996", service: "Le Vélo par TBM", unlock: 1, pMin: 0.10, freeMins: 30 },
+};
+
+// Systèmes de vélos en station avec flux GBFS propre (pas JCDecaux classique, pas Fifteen, pas Mecatran)
+var GBFS_STATION_CITIES = {
+  lyon:       { name: "Lyon",       color: "#e2001a", service: "Vélo'v",  pMin: 0.10, freeMins: 30,
+    url: "https://download.data.grandlyon.com/files/rdata/jcd_jcdecaux.jcdvelov/gbfs.json" },
+  strasbourg: { name: "Strasbourg", color: "#e2001a", service: "Vélhop",  pMin: 0.10, freeMins: 30,
+    url: "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_ae/gbfs.json" },
+  nantes:     { name: "Nantes",     color: "#007a4d", service: "Naolib",  pMin: 0.10, freeMins: 30,
+    url: "https://api.cyclocity.fr/contracts/nantes/gbfs/gbfs.json" },
+  lille:      { name: "Lille",      color: "#e2001a", service: "V'Lille", pMin: 0.10, freeMins: 30,
+    url: "https://media.ilevia.fr/opendata/gbfs.json" },
+  rennes:     { name: "Rennes",     color: "#003189", service: "STAR",    pMin: 0.10, freeMins: 30,
+    url: "https://eu.ftp.opendatasoft.com/star/gbfs/gbfs.json" },
+};
+
+function useMecatranStations(lat, lng) {
+  var [stations, setStations] = useState([]);
+  var [loading,  setLoading]  = useState(false);
+  var [cityName, setCityName] = useState(null);
+
+  useEffect(function() {
+    if (!lat || !lng) { setStations([]); return; }
+    var cityId = detectCity(lat, lng);
+    var city = cityId ? MECATRAN_CITIES[cityId] : null;
+    if (!city) { setStations([]); return; }
+    setCityName(city.name);
+    setLoading(true);
+
+    var url = "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/ci_vcub_p/records" +
+      "?limit=10" +
+      "&where=distance(geo_point_2d%2C%20geom%27POINT(" + lng + "%20" + lat + ")%27%2C%201500m)" +
+      "&order_by=distance(geo_point_2d%2C%20geom%27POINT(" + lng + "%20" + lat + ")%27)";
+
+    fetch(url).then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.results) { setStations([]); setLoading(false); return; }
+        var withDist = data.results.filter(function(s) { return s.etat === "CONNECTEE"; }).map(function(s) {
+          var coords = s.geo_point_2d;
+          var sLat = coords ? coords.lat : lat;
+          var sLng = coords ? coords.lon : lng;
+          var dist = distMeters(lat, lng, sLat, sLng);
+          return {
+            id: s.gid, name: s.nom, dist: dist, lat: sLat, lng: sLng,
+            mechaDispo: s.nbclassiq || 0, elecDispo: s.nbelec || 0,
+            totalDispo: s.nbvelos || 0, docks: s.nbplaces || 0,
+            city: city,
+          };
+        }).slice(0, 3);
+        setStations(withDist);
+        setLoading(false);
+      }).catch(function() { setLoading(false); });
+  }, [lat, lng]);
+
+  return { stations: stations, loading: loading, cityName: cityName };
+}
+
+// Vélos en station via portail GBFS propre (ex: Lyon Vélo'v via Grand Lyon)
+// Le flux de découverte gbfs.json pointe vers station_information et station_status
+function useGbfsStations(lat, lng) {
+  var [stations, setStations] = useState([]);
+
+  useEffect(function() {
+    if (!lat || !lng) { setStations([]); return; }
+    var cityId = detectCity(lat, lng);
+    var city = cityId ? GBFS_STATION_CITIES[cityId] : null;
+    if (!city) { setStations([]); return; }
+
+    fetch(GBFS_PROXY + encodeURIComponent(city.url)).then(function(r) { return r.json(); })
+      .then(function(discovery) {
+        var feeds = discovery.data && (discovery.data.feeds ? discovery.data : (discovery.data.fr || discovery.data.en || Object.values(discovery.data)[0]));
+        var feedList = feeds ? feeds.feeds : null;
+        if (!feedList) return;
+        var infoFeed   = feedList.filter(function(f) { return f.name === "station_information"; })[0];
+        var statusFeed = feedList.filter(function(f) { return f.name === "station_status"; })[0];
+        if (!infoFeed || !statusFeed) return;
+        return Promise.all([
+          fetch(GBFS_PROXY + encodeURIComponent(infoFeed.url)).then(function(r) { return r.json(); }),
+          fetch(GBFS_PROXY + encodeURIComponent(statusFeed.url)).then(function(r) { return r.json(); }),
+        ]);
+      }).then(function(results) {
+        if (!results) return;
+        var info = results[0].data.stations;
+        var status = results[1].data.stations;
+        var statusById = {};
+        status.forEach(function(s) { statusById[s.station_id] = s; });
+        var withDist = info.map(function(s) {
+          var st = statusById[s.station_id] || {};
+          var dist = distMeters(lat, lng, s.lat, s.lon);
+          return { id: s.station_id, name: s.name, dist: dist, lat: s.lat, lng: s.lon,
+            mechaDispo: st.num_bikes_available || 0, elecDispo: 0,
+            totalDispo: st.num_bikes_available || 0, docks: st.num_docks_available || 0, city: city };
+        }).filter(function(s) { return s.dist < 1500; })
+          .sort(function(a, b) { return a.dist - b.dist; }).slice(0, 3);
+        setStations(withDist);
+      }).catch(function() {});
+  }, [lat, lng]);
+
+  return { stations: stations };
+}
+
+// Construit l'URL d'un fichier GBFS Fifteen, avec la clé d'auth seulement si elle existe
+function fifteenUrl(city, filename) {
+  return city.key ? (city.base + filename + "?&key=" + city.key) : (city.base + filename);
+}
+
 // Marseille : JCDecaux a perdu le contrat en 2023 — "Le vélo" est désormais opéré par Fifteen + Inurba
+// Montpellier : "Vélomagg" est aussi sur Fifteen, mais sans clé requise (domaine différent)
 var FIFTEEN_CITIES = {
-  marseille: { name: "Marseille", color: "#009fe3", service: "Le vélo",
+  marseille:   { name: "Marseille",   color: "#009fe3", service: "Le vélo",
     base: "https://api.omega.fifteen.eu/gbfs/2.2/marseille/en/",
     key: "MjE0ZDNmMGEtNGFkZS00M2FlLWFmMWItZGNhOTZhMWQyYzM2",
     unlock: 0, pMin: 0.10, freeMins: 30 },
+  montpellier: { name: "Montpellier", color: "#ff6600", service: "Vélomagg",
+    base: "https://gbfs.theta.fifteen.eu/gbfs/2.2/montpellier/en/",
+    key: null,
+    unlock: 0, pMin: 0.10, freeMins: 60 },
 };
 
 // Détecte la ville selon les coordonnées GPS
@@ -750,6 +1022,20 @@ function detectCity(lat, lng) {
     { id: "brest",           lat: 48.3904, lng: -4.4861,  radius: 0.10 },
     { id: "caen",            lat: 49.1829, lng: -0.3707,  radius: 0.10 },
     { id: "montpellier",     lat: 43.6108, lng: 3.8767,   radius: 0.15 },
+    { id: "grenoble",        lat: 45.1885, lng: 5.7245,   radius: 0.15 },
+    // Villes confirmées avec Bird (catalogue officiel MobilityData) mais absentes des grandes métropoles
+    { id: "ajaccio",         lat: 41.9192, lng: 8.7386,   radius: 0.08 },
+    { id: "castres",         lat: 43.6047, lng: 2.2419,   radius: 0.06 },
+    { id: "chalonsenchampagne", lat: 48.9572, lng: 4.3636, radius: 0.06 },
+    { id: "dieppe",          lat: 49.9241, lng: 1.0791,   radius: 0.06 },
+    { id: "draguignan",      lat: 43.5375, lng: 6.4631,   radius: 0.06 },
+    { id: "epron",           lat: 49.2014, lng: -0.3597,  radius: 0.05 },
+    { id: "laval",           lat: 48.0742, lng: -0.7700,  radius: 0.08 },
+    { id: "millau",          lat: 44.0995, lng: 3.0782,   radius: 0.05 },
+    { id: "montlucon",       lat: 46.3403, lng: 2.6044,   radius: 0.06 },
+    { id: "ouistreham",      lat: 49.2814, lng: -0.2664,  radius: 0.05 },
+    { id: "sarreguemines",   lat: 49.1103, lng: 7.0644,   radius: 0.05 },
+    { id: "vichy",           lat: 46.1278, lng: 3.4264,   radius: 0.06 },
   ];
   for (var i = 0; i < cities.length; i++) {
     var c = cities[i];
@@ -790,7 +1076,7 @@ function useJCDecaux(lat, lng) {
         .map(function(s) {
           var sLat = s.position.lat;
           var sLng = s.position.lng;
-          var dist = Math.round(haversine(lat, lng, sLat, sLng) * 1000);
+          var dist = distMeters(lat, lng, sLat, sLng);
           return {
             id:          s.number,
             name:        s.name,
@@ -831,8 +1117,8 @@ function useFifteenStations(lat, lng) {
     setLoading(true);
 
     Promise.all([
-      fetch(GBFS_PROXY + encodeURIComponent(city.base + "station_information.json?&key=" + city.key)).then(function(r) { return r.json(); }),
-      fetch(GBFS_PROXY + encodeURIComponent(city.base + "station_status.json?&key=" + city.key)).then(function(r) { return r.json(); }),
+      fetch(GBFS_PROXY + encodeURIComponent(fifteenUrl(city, "station_information.json"))).then(function(r) { return r.json(); }),
+      fetch(GBFS_PROXY + encodeURIComponent(fifteenUrl(city, "station_status.json"))).then(function(r) { return r.json(); }),
     ]).then(function(results) {
       var info = results[0].data.stations;
       var status = results[1].data.stations;
@@ -841,7 +1127,7 @@ function useFifteenStations(lat, lng) {
 
       var withDist = info.map(function(s) {
         var st = statusById[s.station_id] || {};
-        var dist = Math.round(haversine(lat, lng, s.lat, s.lon) * 1000);
+        var dist = distMeters(lat, lng, s.lat, s.lon);
         return {
           id: s.station_id, name: s.name, dist: dist, lat: s.lat, lng: s.lon,
           mechaDispo: st.num_bikes_available || 0, elecDispo: 0,
@@ -861,6 +1147,36 @@ function useFifteenStations(lat, lng) {
 }
 
 
+// Vraie distance/durée routière + vrai niveau de trafic, via l'API Mapbox Directions
+// (driving-traffic = avec trafic en temps réel, driving = sans trafic = référence "normal")
+function useRealRoute(from, to) {
+  var [route, setRoute] = useState(null); // { km, mins, trafficRatio }
+
+  useEffect(function() {
+    if (!to) { setRoute(null); return; }
+    Promise.all([
+      fetch("https://api.mapbox.com/directions/v5/mapbox/driving-traffic/" +
+        from.lng + "," + from.lat + ";" + to.lng + "," + to.lat +
+        "?overview=false&access_token=" + MAPBOX_TOKEN).then(function(r) { return r.json(); }),
+      fetch("https://api.mapbox.com/directions/v5/mapbox/driving/" +
+        from.lng + "," + from.lat + ";" + to.lng + "," + to.lat +
+        "?overview=false&access_token=" + MAPBOX_TOKEN).then(function(r) { return r.json(); }),
+    ]).then(function(results) {
+      var traffic = results[0].routes && results[0].routes[0];
+      var normal  = results[1].routes && results[1].routes[0];
+      if (!traffic) { setRoute(null); return; }
+      setRoute({
+        km: traffic.distance / 1000,
+        mins: Math.round(traffic.duration / 60),
+        // Ratio temps réel / temps sans trafic — c'est le vrai niveau de congestion, pas une estimation
+        trafficRatio: normal ? traffic.duration / normal.duration : 1,
+      });
+    }).catch(function() { setRoute(null); });
+  }, [from.lat, from.lng, to ? to.lat : null, to ? to.lng : null]);
+
+  return route;
+}
+
 // ── Compare ────────────────────────────────────────────────────────────────
 function Compare(props) {
   var T = props.T;
@@ -874,6 +1190,7 @@ function Compare(props) {
   var [microFilter, setMicroFilter] = useState("all");
   var [scSort, setScSort] = useState("dist"); // "dist" ou "bat"
   var [vtcSubFilter, setVtcSubFilter] = useState("vtc"); // "vtc" ou "moped"
+  var [showPriceInfo, setShowPriceInfo] = useState(false);
   var [sort,  setSort]  = useState("price_asc");
   var [flash, setFlash] = useState(false);
   var [passengers, setPassengers] = useState(1);
@@ -883,9 +1200,14 @@ function Compare(props) {
   var gbfs  = useGBFS(from.lat, from.lng);
   var jcdecaux = useJCDecaux(from.lat, from.lng);
   var fifteen  = useFifteenStations(from.lat, from.lng);
+  var mecatran = useMecatranStations(from.lat, from.lng);
+  var gbfsStations = useGbfsStations(from.lat, from.lng);
 
-  var km   = to ? Math.max(0.5, haversine(from.lat, from.lng, to.lat, to.lng) * 1.35) : 5.2;
-  var mins = Math.round(km / 0.38);
+  var realRoute = useRealRoute(from, to);
+
+  // Tant que la vraie route n'est pas encore arrivée, on utilise une estimation à vol d'oiseau (provisoire)
+  var km   = realRoute ? realRoute.km : (to ? Math.max(0.5, haversine(from.lat, from.lng, to.lat, to.lng) * 1.35) : 5.2);
+  var mins = realRoute ? realRoute.mins : Math.round(km / 0.38);
   var scMins = Math.round(km * 60 / 14);
 
   var cityId = detectCity(from.lat, from.lng) || "";
@@ -897,50 +1219,62 @@ function Compare(props) {
       stars: m.stars, price: calcMopedPrice(id, km, mins), label: m.label, info: m.info };
   });
 
-  var trafColor = mins > 20 ? "#c0392b" : mins > 12 ? "#ba7517" : "#0f6e56";
-  var trafLabel = mins > 20 ? "Chargé" : mins > 12 ? "Moyen" : "Fluide";
+  // Vrai niveau de trafic : ratio durée-avec-trafic / durée-sans-trafic (Mapbox), pas une estimation par seuils arbitraires
+  var trafficRatio = realRoute ? realRoute.trafficRatio : 1;
+  var trafColor = trafficRatio > 1.4 ? "#c0392b" : trafficRatio > 1.15 ? "#ba7517" : "#0f6e56";
+  var trafLabel = trafficRatio > 1.4 ? "Chargé" : trafficRatio > 1.15 ? "Moyen" : "Fluide";
 
   var surgeInfo = getSurge();
 
-  var vtcList = Object.keys(PLATFORMS).reduce(function(acc, id, idx) {
+  var vtcList = Object.keys(PLATFORMS).filter(function(id) {
+    var p = PLATFORMS[id];
+    // On garde la compagnie si au moins une de ses catégories peut accueillir le nombre de passagers
+    return p.categories.some(function(c) { return c.seats >= passengers; });
+  }).map(function(id) {
     var p = PLATFORMS[id];
     var mult = surgeInfo.multipliers[id] || 1.0;
     var basePrice = calcVtcPrice(id, km, mins);
-    var cats = p.categories.filter(function(c) { return c.seats >= passengers; });
-    cats.forEach(function(cat) {
-      var seatMult = cat.seats >= 6 ? 1.35 : 1.0; // XL/Van plus cher
-      acc.push({
-        id: id + "_" + cat.label, plId: id,
-        name: cat.label, short: p.short, color: p.color, tc: p.tc,
-        stars: p.stars, seats: cat.seats, eta: [3,4,6,8][idx],
-        price: Math.round(basePrice * mult * seatMult * 100) / 100,
-        basePrice: basePrice, surge: mult,
-      });
-    });
-    return acc;
-  }, []).sort(function(a, b) {
+    return {
+      id: id, plId: id,
+      name: p.name, short: p.short, color: p.color, tc: p.tc,
+      stars: p.stars,
+      price: Math.round(basePrice * mult * 100) / 100,
+      basePrice: basePrice, surge: mult,
+    };
+  }).sort(function(a, b) {
     if (sort === "price_asc")  return a.price  - b.price;
     if (sort === "price_desc") return b.price  - a.price;
-    if (sort === "stars")      return b.stars  - a.stars;
-    if (sort === "eta_asc")    return a.eta    - b.eta;
     return 0;
   });
 
   // Scooters fictifs (Lime, Tier, Dott) + Vélib' temps réel
   // Politique "zéro simulation" : on ne construit que les entrées pour lesquelles
   // une vraie position a été trouvée via le proxy GBFS. Aucun fallback inventé.
-  var scList = Object.keys(SCOOTERS).filter(function(id) { return id !== "velib"; }).map(function(id) {
+  // Construit tous les véhicules disponibles (1 entrée par véhicule réel, pas juste le plus proche par opérateur)
+  var allVehicles = [];
+  Object.keys(SCOOTERS).filter(function(id) { return id !== "velib"; }).forEach(function(id) {
     var s = SCOOTERS[id];
-    var operatorKey = id.indexOf("lime") === 0 ? "lime" : id.indexOf("dott") === 0 ? "dott" : id.indexOf("bird") === 0 ? "bird" : id.indexOf("voi") === 0 ? "voi" : null;
+    var operatorKey = id.indexOf("lime") === 0 ? "lime" : id.indexOf("dott") === 0 ? "dott" : id.indexOf("bird") === 0 ? "bird" : id.indexOf("voi") === 0 ? "voi" : id.indexOf("pony") === 0 ? "pony" : null;
     var realData = operatorKey ? gbfs.vehicles[operatorKey] : null;
-    var realMatch = realData ? realData.filter(function(v) { return s.type === "bike" ? v.isBike : !v.isBike; })[0] : null;
-    if (!realMatch) return null; // pas de donnée réelle trouvée — on ne l'affiche pas
+    if (!realData) return;
+    realData.filter(function(v) { return s.type === "bike" ? v.isBike : !v.isBike; }).forEach(function(v) {
+      allVehicles.push({ id: id + "_" + v.id, scId: id, name: s.name + " — " + s.label, short: s.short, color: s.color, tc: s.tc, type: s.type,
+        unlock: s.unlock, pMin: s.pMin, price: calcScPrice(id, scMins), dist: v.dist, real: true,
+        operatorKey: operatorKey, rentalUris: v.rentalUris, rangeKm: v.rangeKm });
+    });
+  });
 
-    return { id: id, name: s.name + " — " + s.label, short: s.short, color: s.color, tc: s.tc, type: s.type,
-      bat: realMatch.bat !== null ? Math.round(realMatch.bat) : null,
-      unlock: s.unlock, pMin: s.pMin, price: calcScPrice(id, scMins), dist: realMatch.dist, real: true,
-      operatorKey: operatorKey, rentalUris: realMatch.rentalUris };
-  }).filter(function(v) { return v !== null; }).concat(
+  // Règle de sélection : max 2 véhicules par compagnie, 5 au total, triés par distance (les plus proches d'abord)
+  allVehicles.sort(function(a, b) { return (a.dist || 0) - (b.dist || 0); });
+  var countPerOperator = {};
+  var scList = [];
+  for (var vi = 0; vi < allVehicles.length && scList.length < 5; vi++) {
+    var entry = allVehicles[vi];
+    var op = entry.operatorKey || entry.scId;
+    countPerOperator[op] = (countPerOperator[op] || 0) + 1;
+    if (countPerOperator[op] <= 2) scList.push(entry);
+  }
+  scList = scList.concat(
     velib.stations.slice(0, 2).map(function(st) {
       var walkMins = Math.round(st.dist / 80); // ~80m/min à pied
       var rideMins = scMins;
@@ -963,7 +1297,7 @@ function Compare(props) {
       };
     })
   ).concat(
-    jcdecaux.stations.concat(fifteen.stations).slice(0, 2).map(function(st) {
+    jcdecaux.stations.concat(fifteen.stations).concat(mecatran.stations).concat(gbfsStations.stations).slice(0, 2).map(function(st) {
       var walkMins = Math.round(st.dist / 80);
       var rideMins = scMins;
       var price = rideMins > st.city.freeMins ? Math.round((rideMins - st.city.freeMins) * st.city.pMin * 100) / 100 : 0;
@@ -1075,7 +1409,8 @@ function Compare(props) {
           })}
         </div>}
 
-        {/* Sélecteur passagers */}
+        {/* Sélecteur passagers — uniquement pour les VTC */}
+        {tab === "vtc" && (
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, background: T.input, borderRadius: 10, padding: "8px 12px" }}>
           <span style={{ fontSize: 16 }}>👥</span>
           <span style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif", flex: 1 }}>
@@ -1087,6 +1422,7 @@ function Compare(props) {
             <button onClick={function() { setPassengers(function(p) { return Math.min(7, p + 1); }); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid " + T.border, background: T.card, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: T.text }}>+</button>
           </div>
         </div>
+        )}
 
         <div style={{ display: "flex", borderBottom: "1px solid " + T.border, marginLeft: -16, marginRight: -16, paddingLeft: 16 }}>
           {[["vtc", "Véhicules"], ["micro", "Micro-mobilité"]].map(function(item) {
@@ -1105,7 +1441,7 @@ function Compare(props) {
         {tab === "vtc" ? (
           <div>
             {/* Sous-filtres VTC / Scooters */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
               {[["vtc","🚗 VTC"],["moped","🛵 Scooters"]].map(function(f) {
                 var active = vtcSubFilter === f[0];
                 return (
@@ -1117,9 +1453,42 @@ function Compare(props) {
                   </button>
                 );
               })}
+              <button onClick={function() { setShowPriceInfo(true); }}
+                style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 14, border: "1px solid " + T.border, background: T.input, color: T.muted, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                ⓘ
+              </button>
             </div>
+
+            {vtcSubFilter === "vtc" && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fff3cd", color: "#854f0b", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, fontFamily: "'DM Sans',sans-serif", marginBottom: 10 }}>
+                💡 Prix en estimation
+              </div>
+            )}
+
+            {showPriceInfo && (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+                onClick={function() { setShowPriceInfo(false); }}>
+                <div style={{ background: T.card, borderRadius: 18, padding: 20, maxWidth: 340, fontFamily: "'DM Sans',sans-serif" }}
+                  onClick={function(e) { e.stopPropagation(); }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 10 }}>💡 D'où viennent ces prix ?</div>
+                  <div style={{ fontSize: 13, color: T.sub, lineHeight: 1.5, marginBottom: 10 }}>
+                    Mobio n'a pas encore d'accès direct aux prix ou positions en temps réel des VTC et scooters (Uber, Bolt, Heetch, Marcel, Yego, Cityscoot). Ces opérateurs ne publient pas cette donnée publiquement.
+                  </div>
+                  <div style={{ fontSize: 13, color: T.sub, lineHeight: 1.5, marginBottom: 10 }}>
+                    Les prix affichés sont donc des <b>estimations</b>, calculées à partir des grilles tarifaires publiques de chaque opérateur (prise en charge + prix au km + prix à la minute), appliquées à la distance et la durée réelles de ton trajet.
+                  </div>
+                  <div style={{ fontSize: 13, color: T.sub, lineHeight: 1.5, marginBottom: 14 }}>
+                    Une majoration est aussi simulée aux heures de forte demande habituelle (heures de pointe, soirées, nuits de weekend) — ce n'est pas la tarification dynamique réelle de l'opérateur en direct, juste une estimation basée sur les tendances courantes.
+                  </div>
+                  <button onClick={function() { setShowPriceInfo(false); }}
+                    style={{ width: "100%", background: T.accent, color: "#fff", border: "none", borderRadius: 10, padding: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                    Compris
+                  </button>
+                </div>
+              </div>
+            )}
             {vtcSubFilter === "vtc" && <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
-              {[["price_asc", "Prix croissant"], ["price_desc", "Prix décroissant"], ["stars", "Meilleures notes"], ["eta_asc", "Plus rapide"]].map(function(item) {
+              {[["price_asc", "Prix croissant"], ["price_desc", "Prix décroissant"]].map(function(item) {
                 return (
                   <button
                     key={item[0]}
@@ -1142,6 +1511,9 @@ function Compare(props) {
 
             {vtcSubFilter === "moped" && (
               <div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fff3cd", color: "#854f0b", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, fontFamily: "'DM Sans',sans-serif", marginBottom: 10 }}>
+                  💡 Prix en estimation
+                </div>
                 {mopedList.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "32px 20px", color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>
                     <div style={{ fontSize: 36, marginBottom: 12 }}>🛵</div>
@@ -1150,12 +1522,18 @@ function Compare(props) {
                   </div>
                 ) : mopedList.map(function(m) {
                   return (
-                    <div key={m.id} onClick={function() { openMopedApp(m.id); }}
+                    <div key={m.id} onClick={function() {
+                      if (to) {
+                        var maxMopedPrice = Math.max.apply(null, mopedList.map(function(x) { return x.price; }));
+                        logTrip({ mode: "moped", operator: m.name, price: m.price, km: km, saved: Math.max(0, maxMopedPrice - m.price), co2: km * CO2_PAR_KM_VOITURE });
+                      }
+                      openMopedApp(m.id);
+                    }}
                       style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                       <Logo short={m.short} color={m.color} tc={m.tc} />
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{m.name}</div>
-                        <div style={{ fontSize: 11, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{m.label} · ⭐ {m.stars}</div>
+                        <div style={{ fontSize: 11, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{m.label}</div>
                         <div style={{ fontSize: 11, color: T.muted, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{m.info}</div>
                       </div>
                       <div style={{ textAlign: "right" }}>
@@ -1168,14 +1546,20 @@ function Compare(props) {
                 })}
               </div>
             )}
-            {vtcSubFilter === "vtc" && vtcList.length === 0 && (
+            {vtcSubFilter === "vtc" && !to && (
+              <div style={{ textAlign: "center", padding: "32px 20px", color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>📍</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>Choisis ta destination</div>
+              </div>
+            )}
+            {vtcSubFilter === "vtc" && to && vtcList.length === 0 && (
               <div style={{ textAlign: "center", padding: "32px 20px", color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>😕</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 6 }}>Aucun véhicule disponible</div>
                 <div style={{ fontSize: 12 }}>Aucune option pour {passengers} passagers. Essaie de réduire le nombre.</div>
               </div>
             )}
-            {vtcSubFilter === "vtc" && vtcList.map(function(v, i) {
+            {vtcSubFilter === "vtc" && to && vtcList.map(function(v, i) {
               return (
                 <div
                   key={v.id}
@@ -1187,12 +1571,7 @@ function Compare(props) {
                   <Logo short={v.short} color={v.color} tc={v.tc} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{v.name}</div>
-                    <div style={{ fontSize: 11, color: T.sub, marginTop: 3, display: "flex", alignItems: "center", gap: 6, fontFamily: "'DM Sans',sans-serif" }}>
-                      <span style={{ background: T.input, padding: "2px 6px", borderRadius: 5, fontSize: 10 }}>⏱ {v.eta} min</span>
-                      <span style={{ background: "#fffbe6", color: "#854f0b", padding: "2px 6px", borderRadius: 5, fontSize: 10 }}>⭐ {v.stars}</span>
-                      <span style={{ background: T.input, padding: "2px 6px", borderRadius: 5, fontSize: 10 }}>👥 {v.seats}</span>
-                      {v.surge === 1 && <span style={{ background: "#e1f5ee", color: "#085041", padding: "2px 6px", borderRadius: 5, fontSize: 10, fontWeight: 700 }}>Prix standard</span>}
-                    </div>
+                    {v.surge === 1 && <div style={{ marginTop: 3 }}><span style={{ background: "#e1f5ee", color: "#085041", padding: "2px 6px", borderRadius: 5, fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans',sans-serif" }}>Prix standard</span></div>}
                   </div>
                   <div style={{ textAlign: "right" }}>
                     {v.surge > 1 && <div style={{ fontSize: 10, color: T.muted, textDecoration: "line-through", fontFamily: "'DM Sans',sans-serif" }}>{v.basePrice.toFixed(2)} €</div>}
@@ -1206,7 +1585,7 @@ function Compare(props) {
         ) : (
           <div>
             <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-              {[["dist","📍 Distance"],["bat","🔋 Batterie"]].map(function(s) {
+              {[["dist","📍 Distance"]].map(function(s) {
                 var active = scSort === s[0];
                 return (
                   <button key={s[0]} onClick={function() { setScSort(s[0]); }}
@@ -1232,7 +1611,6 @@ function Compare(props) {
               </div>
             )}
             {scList.slice().sort(function(a, b) {
-                if (scSort === "bat") return (b.bat || 0) - (a.bat || 0);
                 return (a.dist || 0) - (b.dist || 0);
               }).filter(function(s) {
               // Filtrer par catégorie
@@ -1248,24 +1626,21 @@ function Compare(props) {
               return true;
             }).map(function(s) {
               return (
-                <div key={s.id} onClick={function() { if (s.operatorKey) openScApp(s.operatorKey, s.rentalUris); }} style={{ background: T.card, border: s.real ? "1.5px solid #0072b9" : "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10, position: "relative", cursor: s.operatorKey ? "pointer" : "default" }}>
+                <div key={s.id} onClick={function() {
+                  if (s.operatorKey) {
+                    if (to) logTrip({ mode: "micro", operator: s.name, price: null, km: km, saved: 0, co2: km * CO2_PAR_KM_VOITURE });
+                    openScApp(s.operatorKey, s.rentalUris);
+                  }
+                }} style={{ background: T.card, border: s.real ? "1.5px solid #0072b9" : "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10, position: "relative", cursor: s.operatorKey ? "pointer" : "default" }}>
                   <Logo short={s.short} color={s.color} tc={s.tc} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{s.name}</div>
                     <div style={{ fontSize: 11, color: T.sub, marginTop: 3, display: "flex", alignItems: "center", gap: 6, fontFamily: "'DM Sans',sans-serif", flexWrap: "wrap" }}>
-                      {s.real && s.dist && <span>🚶 {s.dist < 1000 ? s.dist + " m" : (s.dist/1000).toFixed(1) + " km"} à pied</span>}
-                      {!s.real && props.toAddr && <span>📍 {s.dist} m</span>}
-                      {s.real && <span style={{ color: s.elecDispo > 0 ? "#34d186" : T.sub }}>⚡ {s.elecDispo} élec</span>}
-                      {s.real && <span>🚲 {s.mechaDispo} méca</span>}
-                      {s.bat && (
-                        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <div style={{ width: 26, height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
-                            <div style={{ width: s.bat + "%", height: "100%", background: s.color }} />
-                          </div>
-                          {s.bat}%
-                        </span>
-                      )}
-                      {s.real && s.stationName && <span style={{ color: T.muted, fontSize: 10 }}>Station : {s.stationName.length > 20 ? s.stationName.slice(0,20)+"…" : s.stationName}</span>}
+                      {s.real && <span>🚶 {s.dist != null ? (Number(s.dist) < 1000 ? Math.round(Number(s.dist)) + " m" : (Number(s.dist)/1000).toFixed(1) + " km") : "—"} à pied</span>}
+                      {s.rangeKm && <span>🔋 {s.rangeKm} km</span>}
+                      {s.real && s.type === "station" && s.elecDispo > 0 && <span style={{ color: "#34d186" }}>⚡ {s.elecDispo} élec</span>}
+                      {s.real && s.type === "station" && s.mechaDispo > 0 && <span>🚲 {s.mechaDispo} méca</span>}
+                      {s.real && s.stationName && <span style={{ color: T.muted, fontSize: 10 }}>{s.stationName.length > 22 ? s.stationName.slice(0,22)+"…" : s.stationName}</span>}
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
@@ -1291,92 +1666,138 @@ function MapView(props) {
   var mapRef     = useRef(null);
   var mapboxRef  = useRef(null);
   var markersRef = useRef([]);
+  var stationMarkersRef = useRef([]);
   var [ready,    setReady]    = useState(false);
   var [noToken,  setNoToken]  = useState(false);
-  var [filter,   setFilter]   = useState("tous");
+  var [filter,    setFilter]    = useState("tous");
+  var [subFilter, setSubFilter] = useState(null); // sous-filtre actif dans la catégorie sélectionnée
   var [selected, setSelected] = useState(null);
+  var [selectedVehicle, setSelectedVehicle] = useState(null);
+  var [selectedStation, setSelectedStation] = useState(null); // station vélo sélectionnée
+  var [redrawTick, setRedrawTick] = useState(0); // incrémenté pour forcer un redraw même si scId ne change pas
   var [mapStations, setMapStations] = useState([]);
   var posRef = useRef(props.fromAddr || { lat: 48.8566, lng: 2.3522 });
+  var filterRef         = useRef("tous");
+  var subFilterRef      = useRef(null);
+  var selectedRef       = useRef(null);
+  var selectedVehicleIdRef    = useRef(null); // ID unique du véhicule cliqué
+  var selectedStationMarkerRef = useRef(null); // élément DOM du dernier marqueur station cliqué
   var gbfs = useGBFS(props.fromAddr ? props.fromAddr.lat : null, props.fromAddr ? props.fromAddr.lng : null);
 
   var km = 5.2;
 
-  // Positions estimées pour les VTC et scooters partagés (pas d'API de position publique)
-  var VEHICLE_OFFSETS = [
-    { id: "uber",    kind: "vtc",    dlat:  0.008, dlng:  0.010 },
-    { id: "bolt",    kind: "vtc",    dlat:  0.012, dlng: -0.008 },
-    { id: "heetch",  kind: "vtc",    dlat: -0.006, dlng:  0.014 },
-    { id: "marcel",  kind: "vtc",    dlat:  0.015, dlng:  0.005 },
-    { id: "yego",       kind: "moped",  dlat: -0.007, dlng: -0.009 },
-    { id: "cityscoot",  kind: "moped",  dlat:  0.006, dlng:  0.013 },
-  ];
-
-  function addMarkers(map, currentFilter) {
+  function addMarkers(map, currentFilter, currentSubFilter) {
     var mapboxgl = window.mapboxgl;
     markersRef.current.forEach(function(m) { m.remove(); });
     markersRef.current = [];
+
+    // Détermine si un type de véhicule doit s'afficher selon le filtre actif
+    function isVisible(type) {
+      if (currentFilter === "tous") return true;
+      if (currentFilter === "vehicules") {
+        if (!currentSubFilter) return type === "moped";
+        if (currentSubFilter === "vtc") return type === "vtc";
+        if (currentSubFilter === "moped") return type === "moped";
+      }
+      if (currentFilter === "micro") {
+        if (!currentSubFilter) return type === "scooter" || type === "bike" || type === "station";
+        return type === currentSubFilter;
+      }
+      return false;
+    }
 
     // Centre = adresse de départ
     var baseLat = props.fromAddr ? props.fromAddr.lat : 48.8809;
     var baseLng = props.fromAddr ? props.fromAddr.lng : 2.3553;
 
-    VEHICLE_OFFSETS
-      .filter(function(v) { return currentFilter === "tous" || v.kind === currentFilter || (currentFilter === "station" && v.kind === "station"); })
-      .forEach(function(v) {
-        var p = PLATFORMS[v.id] || MOPEDS[v.id] || SCOOTERS[v.id];
-        if (!p) return; // skip if not found
-        var isVtc = v.kind === "vtc";
-        var isMoped = v.kind === "moped";
-        var label = isVtc ? (p.name + " · " + calcVtcPrice(v.id, km, 14).toFixed(2) + " €") : isMoped ? ("🛵 " + p.name + " · " + calcMopedPrice(v.id, km, 14).toFixed(2) + " €") : (v.kind === "scooter" ? ("🛴 " + p.name) : ("🚲 " + p.name));
-
-        var vLat = baseLat + v.dlat;
-        var vLng = baseLng + v.dlng;
-
-        // Wrapper transparent — Mapbox l'utilise pour le positionnement
-        var el = document.createElement("div");
-        el.style.cssText = "position:relative;display:inline-block;width:auto;";
-
-        // Inner div — c'est lui qu'on anime au hover
-        var inner = document.createElement("div");
-        inner.style.cssText = "display:inline-block;background:white;color:#1a1a2e;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;white-space:nowrap;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.15);border:1px solid #e0e0e0;transition:transform .15s;user-select:none;line-height:1.4;width:auto;";
-        inner.textContent = label;
-        inner.onmouseenter = function() { inner.style.transform = "scale(1.1)"; };
-        inner.onmouseleave = function() { inner.style.transform = "scale(1)"; };
-        inner.onclick = function(e) {
-          e.stopPropagation();
-          setSelected(function(prev) { return prev === v.id ? null : v.id; });
-        };
-        el.appendChild(inner);
-
-        var marker = new mapboxgl.Marker({ element: el, anchor: "center" })
-          .setLngLat([vLng, vLat])
-          .addTo(map);
-
-        markersRef.current.push(marker);
-      });
-
     // Vraies trottinettes/vélos (Lime, Dott, Bird, Voi) — positions GPS réelles via le proxy GBFS
-    // Tous les véhicules réels dans le rayon défini sont affichés, sans limite arbitraire
+    // Regroupées en clusters si elles sont visuellement proches à l'écran (recalculé au zoom)
+    var scPoints = [];
     Object.keys(gbfs.vehicles).forEach(function(operatorKey) {
       gbfs.vehicles[operatorKey].forEach(function(veh) {
-        var scId = operatorKey === "lime" ? (veh.isBike ? "lime_bk" : "lime_sc") : operatorKey;
+        var scId = operatorKey === "lime" ? (veh.isBike ? "lime_bk" : "lime_sc") : operatorKey === "pony" ? (veh.isBike ? "pony_bk" : "pony_sc") : operatorKey === "dott" ? (veh.isBike ? "dott_bk" : "dott_sc") : operatorKey === "ecovelo" ? (veh.isBike ? "ecovelo_bk" : "ecovelo_sc") : operatorKey;
         var s = SCOOTERS[scId];
         if (!s) return;
-        if (currentFilter !== "tous" && currentFilter !== s.type) return;
-
-        var el = document.createElement("div");
-        el.style.cssText = "display:inline-block;";
-        var inner = document.createElement("div");
-        inner.style.cssText = "background:" + s.color + ";color:" + s.tc + ";padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;white-space:nowrap;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.15);";
-        inner.textContent = (s.type === "bike" ? "🚲 " : "🛴 ") + s.name;
-        inner.onclick = function(e) { e.stopPropagation(); setSelected(function(prev) { return prev === scId ? null : scId; }); };
-        el.appendChild(inner);
-
-        var marker = new mapboxgl.Marker({ element: el, anchor: "center" })
-          .setLngLat([veh.lng, veh.lat])
-          .addTo(map);
-        markersRef.current.push(marker);
+        if (!isVisible(s.type)) return;
+        scPoints.push({ scId: scId, s: s, veh: veh });
       });
+    });
+
+    // Regroupe les points à moins de 40px les uns des autres, mais UNIQUEMENT au sein d'une même marque
+    // (deux opérateurs différents proches restent toujours deux vignettes distinctes)
+    var CLUSTER_RADIUS_PX = 40;
+    var clusters = [];
+    var byOperator = {};
+    scPoints.forEach(function(p) {
+      if (!byOperator[p.scId]) byOperator[p.scId] = [];
+      byOperator[p.scId].push(p);
+    });
+
+    Object.keys(byOperator).forEach(function(scId) {
+      var points = byOperator[scId];
+      var used = new Array(points.length).fill(false);
+      points.forEach(function(p, i) {
+        if (used[i]) return;
+        var pxA = map.project([p.veh.lng, p.veh.lat]);
+        var group = [p];
+        used[i] = true;
+        points.forEach(function(q, j) {
+          if (used[j] || j === i) return;
+          var pxB = map.project([q.veh.lng, q.veh.lat]);
+          var dx = pxA.x - pxB.x, dy = pxA.y - pxB.y;
+          if (Math.sqrt(dx * dx + dy * dy) < CLUSTER_RADIUS_PX) {
+            group.push(q);
+            used[j] = true;
+          }
+        });
+        clusters.push(group);
+      });
+    });
+
+    clusters.forEach(function(group) {
+      var avgLng = group.reduce(function(sum, p) { return sum + p.veh.lng; }, 0) / group.length;
+      var avgLat = group.reduce(function(sum, p) { return sum + p.veh.lat; }, 0) / group.length;
+
+      var el = document.createElement("div");
+      el.style.cssText = "display:inline-block;";
+      var inner = document.createElement("div");
+
+      if (group.length === 1) {
+        var p = group[0];
+        var isSelected = selectedVehicleIdRef.current !== null && selectedVehicleIdRef.current === p.veh.id;
+        var bg = isSelected ? "#aaa" : p.s.color;
+        var tc = isSelected ? "#fff" : p.s.tc;
+        inner.style.cssText = "background:" + bg + ";color:" + tc + ";padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;white-space:nowrap;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.15);";
+        inner.textContent = (p.s.type === "bike" ? "🚲 " : "🛴 ") + p.s.name;
+        inner.onclick = function(e) {
+          e.stopPropagation();
+          var wasSameVehicle = selectedVehicleIdRef.current === p.veh.id;
+          setSelected(wasSameVehicle ? null : p.scId);
+          setSelectedVehicle(wasSameVehicle ? null : p.veh);
+          selectedVehicleIdRef.current = wasSameVehicle ? null : p.veh.id;
+          setRedrawTick(function(t) { return t + 1; });
+        };
+      } else {
+        // Cluster — vérifier si le véhicule sélectionné est dans ce groupe
+        var containsSelected = selectedVehicleIdRef.current !== null &&
+          group.some(function(p) { return p.veh.id === selectedVehicleIdRef.current; });
+        var topS = group[0].s;
+        var clusterBg = containsSelected ? "#aaa" : topS.color;
+        var clusterTc = containsSelected ? "#fff" : topS.tc;
+        inner.style.cssText = "background:" + clusterBg + ";color:" + clusterTc + ";padding:4px 10px;border-radius:14px;font-size:12px;font-weight:800;font-family:'DM Sans',sans-serif;white-space:nowrap;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);border:2px solid " + (containsSelected ? "#fff" : "#fff") + ";";
+        inner.textContent = (topS.type === "bike" ? "🚲 " : "🛴 ") + topS.name + " ×" + group.length;
+        inner.onclick = function(e) {
+          e.stopPropagation();
+          map.easeTo({ center: [avgLng, avgLat], zoom: map.getZoom() + 2, duration: 400 });
+        };
+      }
+
+      el.appendChild(inner);
+      var marker = new mapboxgl.Marker({ element: el, anchor: "center" })
+        .setLngLat([avgLng, avgLat])
+        .addTo(map);
+      marker.getElement().style.zIndex = "1";
+      markersRef.current.push(marker);
     });
   }
 
@@ -1399,6 +1820,16 @@ function MapView(props) {
   // Charge les marqueurs de stations selon la position
   function loadStationMarkers(map, pos, mapboxgl) {
     if (!map || !pos) return;
+
+    // Retirer les anciens marqueurs de stations avant d'en recréer (sinon ils s'accumulent pour toujours)
+    stationMarkersRef.current.forEach(function(m) { m.remove(); });
+    stationMarkersRef.current = [];
+
+    // Respecter le filtre : stations visibles uniquement dans Micromobilité (sans sous-filtre ou avec sous-filtre "station")
+    var f = filterRef.current, sf = subFilterRef.current;
+    if (f !== "tous" && f !== "micro") return;
+    if (f === "micro" && sf && sf !== "station") return;
+
     var lat = pos.lat, lng = pos.lng;
     var isInParis = lat > 48.7 && lat < 49.0 && lng > 2.1 && lng < 2.6;
 
@@ -1415,7 +1846,7 @@ function MapView(props) {
         var newStations = data.results.filter(function(s) {
           return s.coordonnees_geo && s.is_installed === "OUI" && s.is_renting === "OUI" && s.numbikesavailable > 0;
         }).map(function(s) {
-          return { id: s.stationcode, name: s.name, total: s.numbikesavailable, elec: s.ebike || 0, lat: s.coordonnees_geo.lat, lng: s.coordonnees_geo.lon };
+          return { id: s.stationcode, name: s.name, total: s.numbikesavailable, elec: s.ebike || 0, lat: s.coordonnees_geo.lat, lng: s.coordonnees_geo.lon, dist: distMeters(lat, lng, s.coordonnees_geo.lat, s.coordonnees_geo.lon) };
         });
         setMapStations(newStations);
         data.results.forEach(function(s) {
@@ -1427,48 +1858,15 @@ function MapView(props) {
           var inner = document.createElement("div");
           inner.style.cssText = "background:#0072b9;color:white;padding:3px 7px;border-radius:10px;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap;";
           inner.textContent = "🚲 " + s.numbikesavailable;
-          el.appendChild(inner);
           (function(station) {
-            var popup = new mapboxgl.Popup({ offset: 20, closeButton: true })
-              .setHTML(
-                "<div style='font-family:DM Sans,sans-serif;padding:4px 2px'>" +
-                "<div style='font-weight:700;font-size:13px;margin-bottom:4px'>" + station.name + "</div>" +
-                "<div style='font-size:12px;color:#555'>🚲 " + station.numbikesavailable + " vélos dispo</div>" +
-                "<div style='font-size:12px;color:#555'>🔋 " + (station.ebike || 0) + " électriques</div>" +
-                "<div style='font-size:11px;color:#888;margin-top:4px'>Gratuit 45min · ~0,17€/min</div>" +
-                "</div>"
-              );
-            inner.addEventListener("click", function() {
-              popup.setLngLat([station.coordonnees_geo.lon, station.coordonnees_geo.lat]).addTo(map);
-              // Tracer l'itinéraire piéton vers la station
-              var userPos = posRef.current;
-              if (userPos) {
-                fetch("https://api.mapbox.com/directions/v5/mapbox/walking/" +
-                  userPos.lng + "," + userPos.lat + ";" +
-                  station.coordonnees_geo.lon + "," + station.coordonnees_geo.lat +
-                  "?geometries=geojson&access_token=" + MAPBOX_TOKEN)
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                  if (!data.routes || !data.routes[0]) return;
-                  var geom = data.routes[0].geometry;
-                  var duration = Math.ceil(data.routes[0].duration / 60);
-                  if (mapboxRef.current.getSource("walking-route")) {
-                    mapboxRef.current.getSource("walking-route").setData(geom);
-                  } else {
-                    mapboxRef.current.addSource("walking-route", { type: "geojson", data: geom });
-                    mapboxRef.current.addLayer({ id: "walking-route", type: "line", source: "walking-route",
-                      paint: { "line-color": "#0072b9", "line-width": 3, "line-dasharray": [2, 2] }
-                    });
-                  }
-                  popup.setHTML(popup.getElement().querySelector("div").innerHTML +
-                    "<div style='font-size:11px;color:#0072b9;margin-top:4px'>🚶 " + duration + " min à pied</div>");
-                }).catch(function() {});
-              }
-            });
+            var stDist = distMeters(lat, lng, station.coordonnees_geo.lat, station.coordonnees_geo.lon);
+            inner.onclick = function(e) { e.stopPropagation(); if (selectedStationMarkerRef.current) { selectedStationMarkerRef.current.style.opacity = '1'; selectedStationMarkerRef.current.style.filter = ''; } selectedStationMarkerRef.current = inner; inner.style.opacity = '0.5'; inner.style.filter = 'grayscale(80%)'; setSelectedStation({ name: station.name, dist: stDist, avail: station.numbikesavailable, elec: station.ebike || 0, city: { service: "Vélib'", color: "#0072b9", pMin: 0.17, freeMins: 45 } }); };
           })(s);
-          new mapboxgl.Marker({ element: el, anchor: "center" })
+          el.appendChild(inner);
+          var velibMarker = new mapboxgl.Marker({ element: el, anchor: "center" })
             .setLngLat([s.coordonnees_geo.lon, s.coordonnees_geo.lat])
             .addTo(map);
+          stationMarkersRef.current.push(velibMarker);
         });
       })
       .catch(function(e) {
@@ -1489,17 +1887,23 @@ function MapView(props) {
           if (!Array.isArray(data) || !map) return;
           data.filter(function(s) {
             return s.status === "OPEN" && s.available_bikes > 0 &&
-              haversine(lat, lng, s.position.lat, s.position.lng) * 1000 < 1000;
-          }).slice(0, 8).forEach(function(s) {
+              distMeters(lat, lng, s.position.lat, s.position.lng) < 5000
+          }).sort(function(a, b) { return distMeters(lat, lng, a.position.lat, a.position.lng) - distMeters(lat, lng, b.position.lat, b.position.lng); })
+          .forEach(function(s) {
+            var dM = distMeters(lat, lng, s.position.lat, s.position.lng);
             var el = document.createElement("div");
             el.style.cssText = "display:inline-block;";
             var inner = document.createElement("div");
             inner.style.cssText = "background:" + city2.color + ";color:white;padding:3px 7px;border-radius:10px;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap;";
             inner.textContent = "🚲 " + s.available_bikes;
+            (function(station, dist) {
+              inner.onclick = function(e) { e.stopPropagation(); if (selectedStationMarkerRef.current) { selectedStationMarkerRef.current.style.opacity = '1'; selectedStationMarkerRef.current.style.filter = ''; } selectedStationMarkerRef.current = inner; inner.style.opacity = '0.5'; inner.style.filter = 'grayscale(80%)'; setSelectedStation({ name: station.name, dist: dist, avail: station.available_bikes, city: city2, lat: station.position.lat, lon: station.position.lng }); };
+            })(s, dM);
             el.appendChild(inner);
-            new mapboxgl.Marker({ element: el, anchor: "center" })
+            var jcdMarker = new mapboxgl.Marker({ element: el, anchor: "center" })
               .setLngLat([s.position.lng, s.position.lat])
               .addTo(map);
+            stationMarkersRef.current.push(jcdMarker);
           });
         })
         .catch(function() {});
@@ -1511,8 +1915,8 @@ function MapView(props) {
     var cityF = cityIdF ? FIFTEEN_CITIES[cityIdF] : null;
     if (cityF) {
       Promise.all([
-        fetch(GBFS_PROXY + encodeURIComponent(cityF.base + "station_information.json?&key=" + cityF.key)).then(function(r) { return r.json(); }),
-        fetch(GBFS_PROXY + encodeURIComponent(cityF.base + "station_status.json?&key=" + cityF.key)).then(function(r) { return r.json(); }),
+        fetch(GBFS_PROXY + encodeURIComponent(fifteenUrl(cityF, "station_information.json"))).then(function(r) { return r.json(); }),
+        fetch(GBFS_PROXY + encodeURIComponent(fifteenUrl(cityF, "station_status.json"))).then(function(r) { return r.json(); }),
       ]).then(function(results) {
         if (!map) return;
         var info = results[0].data.stations;
@@ -1521,26 +1925,122 @@ function MapView(props) {
         status.forEach(function(s) { statusById[s.station_id] = s; });
 
         info.filter(function(s) {
-          return haversine(lat, lng, s.lat, s.lon) * 1000 < 1000;
-        }).slice(0, 8).forEach(function(s) {
+          return distMeters(lat, lng, s.lat, s.lon) < 5000
+        }).sort(function(a, b) { return distMeters(lat, lng, a.lat, a.lon) - distMeters(lat, lng, b.lat, b.lon); })
+        .forEach(function(s) {
           var st = statusById[s.station_id] || {};
           var avail = st.num_bikes_available || 0;
           if (avail === 0) return;
+          var dM = distMeters(lat, lng, s.lat, s.lon);
           var el = document.createElement("div");
           el.style.cssText = "display:inline-block;";
           var inner = document.createElement("div");
           inner.style.cssText = "background:" + cityF.color + ";color:white;padding:3px 7px;border-radius:10px;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap;";
           inner.textContent = "🚲 " + avail;
+          (function(station, dist, avail, city) {
+            inner.onclick = function(e) { e.stopPropagation(); if (selectedStationMarkerRef.current) { selectedStationMarkerRef.current.style.opacity = '1'; selectedStationMarkerRef.current.style.filter = ''; } selectedStationMarkerRef.current = inner; inner.style.opacity = '0.5'; inner.style.filter = 'grayscale(80%)'; setSelectedStation({ name: station.name, dist: dist, avail: avail, city: city, lat: station.lat, lon: station.lon }); };
+          })(s, dM, avail, cityF);
           el.appendChild(inner);
-          new mapboxgl.Marker({ element: el, anchor: "center" })
+          var fifteenMarker = new mapboxgl.Marker({ element: el, anchor: "center" })
             .setLngLat([s.lon, s.lat])
             .addTo(map);
+          stationMarkersRef.current.push(fifteenMarker);
         });
       }).catch(function() {});
+    }
+
+    // Bordeaux — "Le Vélo par TBM" via le portail OpenData de Bordeaux Métropole
+    var cityIdM = detectCity(lat, lng);
+    var cityM = cityIdM ? MECATRAN_CITIES[cityIdM] : null;
+    if (cityM) {
+      var urlM = "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/ci_vcub_p/records" +
+        "?limit=10" +
+        "&where=distance(geo_point_2d%2C%20geom%27POINT(" + lng + "%20" + lat + ")%27%2C%201000m)" +
+        "&order_by=distance(geo_point_2d%2C%20geom%27POINT(" + lng + "%20" + lat + ")%27)";
+
+      fetch(urlM).then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.results || !map) return;
+          data.results.filter(function(s) {
+            return s.etat === "CONNECTEE" && (s.nbvelos || 0) > 0 && s.geo_point_2d;
+          }).slice(0, 8).forEach(function(s) {
+            var coords = s.geo_point_2d;
+            var el = document.createElement("div");
+            el.style.cssText = "display:inline-block;";
+            var inner = document.createElement("div");
+            inner.style.cssText = "background:" + cityM.color + ";color:white;padding:3px 7px;border-radius:10px;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap;";
+            inner.textContent = "🚲 " + s.nbvelos;
+            el.appendChild(inner);
+
+            (function(station, c) {
+              var distM = distMeters(lat, lng, c.lat, c.lon);
+              inner.onclick = function(e) { e.stopPropagation(); if (selectedStationMarkerRef.current) { selectedStationMarkerRef.current.style.opacity = '1'; selectedStationMarkerRef.current.style.filter = ''; } selectedStationMarkerRef.current = inner; inner.style.opacity = '0.5'; inner.style.filter = 'grayscale(80%)'; setSelectedStation({ name: station.nom, dist: distM, avail: station.nbvelos, elec: station.nbelec || 0, city: cityM }); };
+            })(s, coords);
+
+            var mecatranMarker = new mapboxgl.Marker({ element: el, anchor: "center" })
+              .setLngLat([coords.lon, coords.lat])
+              .addTo(map);
+            stationMarkersRef.current.push(mecatranMarker);
+          });
+        }).catch(function() {});
+    }
+
+    // Systèmes de vélos en station GBFS génériques (Lyon Vélo'v etc.)
+    var cityIdG = detectCity(lat, lng);
+    var cityG = cityIdG ? GBFS_STATION_CITIES[cityIdG] : null;
+    if (cityG) {
+      fetch(GBFS_PROXY + encodeURIComponent(cityG.url)).then(function(r) { return r.json(); })
+        .then(function(discovery) {
+          var feeds = discovery.data && (discovery.data.feeds ? discovery.data : (discovery.data.fr || discovery.data.en || Object.values(discovery.data)[0]));
+          var feedList = feeds ? feeds.feeds : null;
+          if (!feedList) return;
+          var infoFeed   = feedList.filter(function(f) { return f.name === "station_information"; })[0];
+          var statusFeed = feedList.filter(function(f) { return f.name === "station_status"; })[0];
+          if (!infoFeed || !statusFeed) return;
+          return Promise.all([
+            fetch(GBFS_PROXY + encodeURIComponent(infoFeed.url)).then(function(r) { return r.json(); }),
+            fetch(GBFS_PROXY + encodeURIComponent(statusFeed.url)).then(function(r) { return r.json(); }),
+          ]);
+        }).then(function(results) {
+          if (!results || !map) return;
+          var info = results[0].data.stations;
+          var status = results[1].data.stations;
+          var statusById = {};
+          status.forEach(function(s) { statusById[s.station_id] = s; });
+          info.filter(function(s) { return distMeters(lat, lng, s.lat, s.lon) < 5000 })
+            .sort(function(a, b) { return distMeters(lat, lng, a.lat, a.lon) - distMeters(lat, lng, b.lat, b.lon); })
+            .forEach(function(s) {
+              var st = statusById[s.station_id] || {};
+              var avail = st.num_bikes_available || 0;
+              if (avail === 0) return;
+              var dM = distMeters(lat, lng, s.lat, s.lon);
+              var el = document.createElement("div");
+              el.style.cssText = "display:inline-block;";
+              var inner = document.createElement("div");
+              inner.style.cssText = "background:" + cityG.color + ";color:white;padding:3px 7px;border-radius:10px;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.2);white-space:nowrap;";
+              inner.textContent = "🚲 " + avail;
+              (function(station, dist) {
+                inner.onclick = function(e) { e.stopPropagation(); if (selectedStationMarkerRef.current) { selectedStationMarkerRef.current.style.opacity = '1'; selectedStationMarkerRef.current.style.filter = ''; } selectedStationMarkerRef.current = inner; inner.style.opacity = '0.5'; inner.style.filter = 'grayscale(80%)'; setSelectedStation({ name: station.name, dist: dist, avail: avail, city: cityG }); };
+              })(s, dM);
+              el.appendChild(inner);
+              var gbfsStMarker = new mapboxgl.Marker({ element: el, anchor: "center" })
+                .setLngLat([s.lon, s.lat]).addTo(map);
+              stationMarkersRef.current.push(gbfsStMarker);
+            });
+        }).catch(function() {});
     }
   }
 
   // drawRoute — met à jour l'itinéraire sur la carte
+  // Retire le tracé piéton de la carte — sinon il reste affiché indéfiniment vers
+  // le dernier véhicule cliqué, même après fermeture du panneau ou re-clustering.
+  function clearWalkingRoute() {
+    var map = mapboxRef.current;
+    if (!map) return;
+    if (map.getLayer("walking-route")) map.removeLayer("walking-route");
+    if (map.getSource("walking-route")) map.removeSource("walking-route");
+  }
+
   function drawRoute(map, fromLng, fromLat, toLng, toLat) {
     var mapboxgl = window.mapboxgl;
     fetch(
@@ -1585,10 +2085,11 @@ function MapView(props) {
     });
 
     map.on("load", function() {
-      // Marqueur utilisateur
+      // Marqueur utilisateur — toujours au-dessus des véhicules (z-index élevé)
       var userEl = document.createElement("div");
       userEl.style.cssText = "width:14px;height:14px;border-radius:50%;background:#34d186;border:3px solid white;box-shadow:0 0 0 8px rgba(52,209,134,.15)";
       var userMarker = new mapboxgl.Marker({ element: userEl }).setLngLat([props.fromAddr ? props.fromAddr.lng : 2.3553, props.fromAddr ? props.fromAddr.lat : 48.8809]).addTo(map);
+      userMarker.getElement().style.zIndex = "999";
       mapboxRef.userMarker = userMarker;
 
       // Marqueur destination
@@ -1660,37 +2161,53 @@ function MapView(props) {
     addMarkers(mapboxRef.current, filter);
   }, [props.fromAddr, props.toAddr]);
 
-  // Update markers when filter changes
+  // Update markers when filter or subFilter changes
   useEffect(function() {
+    filterRef.current = filter;
+    subFilterRef.current = subFilter;
     if (!mapboxRef.current) return;
-    addMarkers(mapboxRef.current, filter);
-  }, [filter]);
+    clearWalkingRoute();
+    addMarkers(mapboxRef.current, filter, subFilter);
+  }, [filter, subFilter]);
+
+  // Redessiner les marqueurs quand la sélection change pour mettre à jour l'effet visuel
+  useEffect(function() {
+    selectedRef.current = selected;
+    if (!mapboxRef.current) return;
+    addMarkers(mapboxRef.current, filterRef.current, subFilterRef.current);
+  }, [selected, redrawTick]);
 
   // Rafraîchir les marqueurs quand les vraies données GBFS arrivent
   useEffect(function() {
     if (!mapboxRef.current) return;
-    addMarkers(mapboxRef.current, filter);
-  }, [gbfs.vehicles]);
+    var map = mapboxRef.current;
+    addMarkers(map, filterRef.current, subFilterRef.current);
+
+    function onZoom() { addMarkers(map, filterRef.current, subFilterRef.current); }
+    map.on("zoomend", onZoom);
+    return function() { map.off("zoomend", onZoom); };
+  }, [gbfs.vehicles, filter]);
+
+  // Recharger les stations quand le filtre change
+  useEffect(function() {
+    if (!mapboxRef.current) return;
+    loadStationMarkers(mapboxRef.current, posRef.current, window.mapboxgl);
+  }, [filter, subFilter]);
 
 
 
-  var selVtc = selected && PLATFORMS[selected] ? { id: selected, ...PLATFORMS[selected], price: calcVtcPrice(selected, km, 14), eta: [3,4,6,8][Object.keys(PLATFORMS).indexOf(selected)] } : null;
+  var selVtc = selected && PLATFORMS[selected] ? { id: selected, ...PLATFORMS[selected], price: calcVtcPrice(selected, km, 14) } : null;
   var selSc  = selected && SCOOTERS[selected]  ? { id: selected, ...SCOOTERS[selected] } : null;
 
-  var filters = [["tous","Tous"],["vtc","Véhicules"],["scooter","Trottinettes"],["bike","Vélos libres"],["station","Vélos en station"]];
+  var filters = [["tous","Tous"],["vehicules","🚗 Véhicules"],["micro","🛴 Micromobilité"]];
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
       {/* Barre de recherche */}
-      <div style={{ background: T.card, padding: "10px 14px", borderBottom: "1px solid " + T.border }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, background: T.input, borderRadius: 12, padding: "9px 14px", fontSize: 13, fontFamily: "'DM Sans',sans-serif", color: T.text }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d186", display: "inline-block", flexShrink: 0 }} />
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>{(props.fromAddr || {label:'Gare du Nord'}).label}</span>
-          <span style={{ flex: 1, borderBottom: "1.5px dashed " + T.border, margin: "0 4px" }} />
-          <span style={{ width: 8, height: 8, background: T.accent, borderRadius: "50%", display: "inline-block", flexShrink: 0 }} />
-          <span style={{ color: T.sub, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 120 }}>{props.toAddr ? props.toAddr.label : 'Où allez-vous ?'}</span>
-        </div>
+      <div style={{ background: T.card, padding: "10px 14px", borderBottom: "1px solid " + T.border, display: "flex", flexDirection: "column", gap: 8 }}>
+        <AddrInput value={props.fromAddr ? props.fromAddr.label : ""} dot="#34d186" ph="Départ" onSelect={function(p) { props.setFromAddr && props.setFromAddr(p); }} T={T} />
+        <AddrInput value={props.toAddr ? props.toAddr.label : ""} dot={T.accent} ph="Où voulez-vous aller ?" onSelect={function(p) { props.setToAddr && props.setToAddr(p); }} T={T} />
       </div>
 
       {/* Carte */}
@@ -1718,100 +2235,138 @@ function MapView(props) {
           </div>
         )}
 
-        <div ref={mapRef} style={{ width: "100%", height: "310px" }} onClick={function() { setSelected(null); }} />
+        <div ref={mapRef} style={{ width: "100%", height: "310px" }} onClick={function() { setSelected(null); setSelectedVehicle(null); selectedVehicleIdRef.current = null; setSelectedStation(null); if (selectedStationMarkerRef.current) { selectedStationMarkerRef.current.style.opacity = "1"; selectedStationMarkerRef.current.style.filter = ""; selectedStationMarkerRef.current = null; } clearWalkingRoute(); }} />
 
-        {/* Filtres */}
-        <div style={{ position: "absolute", bottom: 10, left: 10, display: "flex", gap: 6, zIndex: 10 }}>
-          {filters.map(function(f) {
-            return (
-              <button
-                key={f[0]}
-                onClick={function() { setFilter(f[0]); }}
-                style={{ background: filter === f[0] ? "#1a1a2e" : "rgba(255,255,255,.95)", color: filter === f[0] ? "#fff" : "#555", border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", boxShadow: "0 2px 8px rgba(0,0,0,.12)" }}
-              >{f[1]}</button>
-            );
-          })}
-        </div>
-
-        {/* Popup véhicule sélectionné */}
-        {selected && (selVtc || selSc) && (
-          <div style={{ position: "absolute", top: 54, left: "50%", transform: "translateX(-50%)", background: T.card, borderRadius: 16, padding: "14px 16px", boxShadow: "0 8px 30px rgba(0,0,0,.14)", minWidth: 230, zIndex: 20, border: "1px solid " + T.border }}>
-            <button onClick={function() { setSelected(null); }} style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", fontSize: 18, color: T.muted, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</button>
-            {selVtc && (
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                  <Logo short={selVtc.short} color={selVtc.color} tc={selVtc.tc} size={34} />
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{selVtc.name}</div>
-                    <div style={{ fontSize: 11, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>⏱ {selVtc.eta} min · 4 passagers</div>
-                  </div>
-                  <div style={{ marginLeft: "auto", fontSize: 18, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{selVtc.price.toFixed(2)} €</div>
-                </div>
-                <button
-                  onClick={function() { props.onVehicle(selVtc); setSelected(null); }}
-                  style={{ width: "100%", background: T.accent, color: "#fff", border: "none", borderRadius: 10, padding: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}
-                >Voir les détails →</button>
+        {/* Bandeau station vélo sélectionnée */}
+        {selectedStation && (
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: T.card, borderTop: "1px solid " + T.border, padding: "10px 14px", zIndex: 20, display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: (selectedStation.city && selectedStation.city.color) || "#0072b9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, position: "relative" }}>
+              🚲
+              <div style={{ position: "absolute", bottom: 4, left: 3, right: 3, height: 2, background: "rgba(255,255,255,0.7)", borderRadius: 1 }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{selectedStation.name}</div>
+              <div style={{ fontSize: 11, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>
+                🚶 {selectedStation.dist} m · 🚲 {selectedStation.avail} vélos{selectedStation.elec > 0 ? " (⚡ " + selectedStation.elec + ")" : ""}
               </div>
-            )}
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Gratuit {(selectedStation.city && selectedStation.city.freeMins) || 45}min</div>
+              <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{(selectedStation.city && selectedStation.city.pMin) || 0.17}€/min ensuite</div>
+            </div>
+            <button onClick={function() { setSelectedStation(null); }}
+              style={{ background: "none", border: "none", fontSize: 18, color: T.muted, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>×</button>
+          </div>
+        )}
+
+        {/* Bandeau compact en bas de la carte — ne cache pas le véhicule sélectionné */}
+        {selected && (selVtc || selSc) && (
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: T.card, borderTop: "1px solid " + T.border, padding: "10px 14px", zIndex: 20, display: "flex", alignItems: "center", gap: 10 }}>
             {selSc && (function() {
-              var operatorKey = selected.indexOf("lime") === 0 ? "lime" : selected;
-              var realData = gbfs.vehicles[operatorKey];
-              var realMatch = realData ? realData.filter(function(v) { return selSc.type === "bike" ? v.isBike : !v.isBike; })[0] : null;
+              var operatorKey = selected.indexOf("lime") === 0 ? "lime" : selected.indexOf("pony") === 0 ? "pony" : selected.indexOf("dott") === 0 ? "dott" : selected.indexOf("yego") === 0 ? "yego_moped" : selected;
+              var realMatch = selectedVehicle || (gbfs.vehicles[operatorKey] ? gbfs.vehicles[operatorKey].filter(function(v) { return selSc.type === "bike" ? v.isBike : !v.isBike; })[0] : null);
               return (
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                  <Logo short={selSc.short} color={selSc.color} tc={selSc.tc} size={34} />
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{selSc.name} — {selSc.label}</div>
+                <>
+                  <Logo short={selSc.short} color={selSc.color} tc={selSc.tc} size={30} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{selSc.name}</div>
                     <div style={{ fontSize: 11, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>
-                      {realMatch && (realMatch.dist + " m" + (realMatch.bat !== null ? " · 🔋 " + Math.round(realMatch.bat) + "%" : ""))}
+                      {realMatch && (realMatch.dist + " m" + (realMatch.rangeKm ? " · 🔋 " + realMatch.rangeKm + " km" : ""))}
                     </div>
                   </div>
-                </div>
-                <button
-                  onClick={function() { openScApp(operatorKey, realMatch ? realMatch.rentalUris : null); }}
-                  style={{ width: "100%", background: selSc.color, color: "#fff", border: "none", borderRadius: 10, padding: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
-                  Ouvrir {selSc.name} →
-                </button>
-              </div>
+                  <button onClick={function() { openScApp(operatorKey, realMatch ? realMatch.rentalUris : null); }}
+                    style={{ background: selSc.color, color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap" }}>
+                    Ouvrir →
+                  </button>
+                  <button onClick={function() { setSelected(null); setSelectedVehicle(null); selectedVehicleIdRef.current = null; }}
+                    style={{ background: "none", border: "none", fontSize: 18, color: T.muted, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>×</button>
+                </>
               );
             })()}
+            {selVtc && (
+              <>
+                <Logo short={selVtc.short} color={selVtc.color} tc={selVtc.tc} size={30} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{selVtc.name}</div>
+                  <div style={{ fontSize: 11, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>Estimation</div>
+                </div>
+                <button onClick={function() { props.onVehicle(selVtc); setSelected(null); }}
+                  style={{ background: T.accent, color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", whiteSpace: "nowrap" }}>
+                  Voir →
+                </button>
+                <button onClick={function() { setSelected(null); setSelectedVehicle(null); selectedVehicleIdRef.current = null; }}
+                  style={{ background: "none", border: "none", fontSize: 18, color: T.muted, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>×</button>
+              </>
+            )}
           </div>
         )}
       </div>
 
-      {/* Liste véhicules en bas */}
+      {/* Filtres — niveau 1 */}
+      <div style={{ padding: "8px 10px 0", display: "flex", gap: 6, background: T.card, borderTop: "1px solid " + T.border }}>
+        {filters.map(function(f) {
+          return (
+            <button key={f[0]}
+              onClick={function() {
+                if (filter === f[0] && f[0] !== "tous") { setFilter("tous"); setSubFilter(null); }
+                else { setFilter(f[0]); setSubFilter(null); }
+              }}
+              style={{ background: filter === f[0] ? "#1a1a2e" : T.input, color: filter === f[0] ? "#fff" : T.sub, border: "none", borderRadius: 20, padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}
+            >{f[1]}</button>
+          );
+        })}
+      </div>
+
+      {/* Sous-filtres — niveau 2 */}
+      {(filter === "vehicules" || filter === "micro") && (
+        <div style={{ padding: "6px 10px 8px", display: "flex", gap: 6, background: T.card, flexWrap: "wrap" }}>
+          {filter === "vehicules" && [["vtc","🚗 VTC"],["moped","🛵 Scooters"]].map(function(f) {
+            return (
+              <button key={f[0]} onClick={function() { setSubFilter(subFilter === f[0] ? null : f[0]); }}
+                style={{ background: subFilter === f[0] ? "#FF6B00" : T.input, color: subFilter === f[0] ? "#fff" : T.sub, border: "none", borderRadius: 20, padding: "4px 11px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}
+              >{f[1]}</button>
+            );
+          })}
+          {filter === "micro" && [["scooter","🛴 Trottinettes"],["bike","🚲 Vélos libres"],["station","🏪 Vélos en station"]].map(function(f) {
+            return (
+              <button key={f[0]} onClick={function() { setSubFilter(subFilter === f[0] ? null : f[0]); }}
+                style={{ background: subFilter === f[0] ? "#0072b9" : T.input, color: subFilter === f[0] ? "#fff" : T.sub, border: "none", borderRadius: 20, padding: "4px 11px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}
+              >{f[1]}</button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Liste véhicules en bas — visible seulement pour le filtre Véhicules */}
+      {(filter === "vehicules" || filter === "micro" || filter === "tous") && (
       <div style={{ background: T.card, borderTop: "1px solid " + T.border, flex: 1, overflowY: "auto" }}>
+        {(!subFilter || subFilter === "vtc") ? (
+          <div style={{ textAlign: "center", padding: "28px 20px", color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>
+            <div style={{ fontSize: 32, marginBottom: 10 }}>🚗</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 6 }}>Prochainement disponible</div>
+            <div style={{ fontSize: 12 }}>La position en temps réel des VTC nécessite un partenariat avec les opérateurs. En attendant, retrouve une estimation de prix dans l'onglet Comparer.</div>
+          </div>
+        ) : (
+        <>
         <div style={{ padding: "10px 14px 6px", fontSize: 10, color: T.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: .8, fontFamily: "'DM Sans',sans-serif" }}>
           Véhicules à proximité
         </div>
-        <div style={{ display: "flex", gap: 8, padding: "0 12px 14px", overflowX: "auto" }}>
-          {Object.keys(PLATFORMS).filter(function() { return filter === "tous" || filter === "vtc"; }).map(function(id, i) {
-            var p = PLATFORMS[id];
-            var pr = calcVtcPrice(id, km, 14);
-            return (
-              <div key={id} style={{ flexShrink: 0, width: 110, background: i === 0 ? T.card : T.input, border: i === 0 ? "1.5px solid " + T.accent : "1px solid " + T.border, borderRadius: 14, padding: "10px 11px", cursor: "pointer" }}
-                onClick={function() { setSelected(id); }}>
-                <Logo short={p.short} color={p.color} tc={p.tc} size={28} />
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginTop: 6, fontFamily: "'DM Sans',sans-serif" }}>{p.name}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{pr.toFixed(2)} €</div>
-                <div style={{ fontSize: 10, color: T.muted, marginTop: 1, fontFamily: "'DM Sans',sans-serif" }}>⏱ {[3,4,6,8][i]} min</div>
-              </div>
-            );
-          })}
-          {(filter === "tous" || filter === "station") && mapStations.slice(0, 3).map(function(st) {
+        <div style={{ display: "flex", gap: 8, padding: "0 12px 14px", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollSnapType: "x proximity" }}>
+          {(filter === "tous" || (filter === "micro" && (!subFilter || subFilter === "station"))) && mapStations.slice(0, 3).map(function(st) {
             return (
               <div key={"vb_" + st.id} style={{ flexShrink: 0, width: 110, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "10px 11px" }}>
                 <Logo short="Vb" color="#0072b9" tc="#fff" size={28} />
                 <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginTop: 6, fontFamily: "'DM Sans',sans-serif" }}>Vélib'</div>
                 <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif", marginBottom: 2 }}>{st.name.length > 18 ? st.name.slice(0,18)+"…" : st.name}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#0072b9", fontFamily: "'DM Sans',sans-serif" }}>🚲 {st.total} vélos</div>
+                <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>🚶 {st.dist} m</div>
                 <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Gratuit 45min</div>
               </div>
             );
           })}
           {(function() {
-            // Construit la liste réelle : un véhicule par opérateur trouvé via le proxy GBFS, le plus proche
+            // Un seul véhicule par opérateur+type (le plus proche) — évite les doublons Voi/Pony/Lime
+            var seenOperators = {};
             var realScooters = [];
             Object.keys(gbfs.vehicles).forEach(function(operatorKey) {
               var byType = { scooter: null, bike: null };
@@ -1822,37 +2377,92 @@ function MapView(props) {
               ["scooter", "bike"].forEach(function(t) {
                 var veh = byType[t];
                 if (!veh) return;
-                var scId = operatorKey === "lime" ? (t === "bike" ? "lime_bk" : "lime_sc") : operatorKey;
+                var scId = operatorKey === "lime" ? (t === "bike" ? "lime_bk" : "lime_sc") : operatorKey === "pony" ? (t === "bike" ? "pony_bk" : "pony_sc") : operatorKey === "dott" ? (t === "bike" ? "dott_bk" : "dott_sc") : operatorKey;
+                if (seenOperators[scId]) return; // déjà un véhicule pour cet opérateur+type
+                seenOperators[scId] = true;
                 var s = SCOOTERS[scId];
                 if (!s) return;
-                if (filter !== "tous" && filter !== s.type) return;
+                if (filter === "vehicules" && s.type !== "moped") return;
+                if (filter === "micro" && s.type === "moped") return;
+                // Filtrer par sous-filtre actif
+                if (subFilter === "scooter" && s.type !== "scooter") return;
+                if (subFilter === "bike" && s.type !== "bike") return;
+                if (subFilter === "station") return; // stations gérées séparément
                 realScooters.push({ scId: scId, s: s, veh: veh });
               });
             });
+
+            // Stations vélos — une par nom de service (TBM, JCDecaux, Vélib'...)
+            var stationItems = [];
+            if (filter === "tous" || filter === "micro") {
+              mapStations.forEach(function(st) {
+                var cityObj = st.city || { service: "Vélib'", color: "#0072b9", pMin: 0.17, freeMins: 45 };
+                var key = cityObj.service || cityObj.name || "station";
+                if (seenOperators["station_" + key]) return;
+                seenOperators["station_" + key] = true;
+                stationItems.push({ st: st, city: cityObj });
+              });
+            }
+
+            // Liste statique des villes sans certains types (vérifiée manuellement)
+            var NO_SCOOTERS   = ["toulouse", "montpellier", "nantes", "rennes", "reims"];
+            var NO_FREE_BIKES = ["nantes", "rennes", "reims"];
+            var NO_STATIONS   = ["reims"]; // toutes les grandes villes ont des vélos en station — à compléter au cas par cas
+            var HAS_MOPEDS    = ["bordeaux", "toulouse", "nice"];
+            var detectedCity = detectCity(props.fromAddr ? props.fromAddr.lat : 0, props.fromAddr ? props.fromAddr.lng : 0) || "";
+
+            if (subFilter === "moped" && HAS_MOPEDS.indexOf(detectedCity) < 0) {
+              return [<div key="empty-mp" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>Aucun opérateur de scooter n'est référencé dans cette ville par Mobio.</div>];
+            }
+            if (subFilter === "scooter" && NO_SCOOTERS.indexOf(detectedCity) >= 0) {
+              return [<div key="empty-sc" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>Aucun opérateur de trottinette n'est référencé dans cette ville par Mobio.</div>];
+            }
+            if (subFilter === "bike" && NO_FREE_BIKES.indexOf(detectedCity) >= 0) {
+              return [<div key="empty-bk" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>Aucun opérateur de vélo libre n'est référencé dans cette ville par Mobio.</div>];
+            }
+            if (subFilter === "station" && NO_STATIONS.indexOf(detectedCity) >= 0) {
+              return [<div key="empty-st" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>Aucun opérateur de vélo en station n'est référencé dans cette ville par Mobio.</div>];
+            }
+            // Sans sous-filtre : message général si aucun véhicule disponible dans la ville
+            if (!subFilter && filter === "micro" && realScooters.length === 0 && stationItems.length === 0 &&
+                NO_SCOOTERS.indexOf(detectedCity) >= 0 && NO_FREE_BIKES.indexOf(detectedCity) >= 0) {
+              return [<div key="empty-all" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>Aucun opérateur de micro-mobilité n'est référencé dans cette ville par Mobio.</div>];
+            }
+
             return realScooters.map(function(item) {
               var s = item.s, veh = item.veh;
               return (
-                <div key={item.scId} style={{ flexShrink: 0, width: 110, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "10px 11px", cursor: "pointer" }}
-                  onClick={function() { setSelected(item.scId); }}>
+                <div key={item.scId + "_" + item.veh.id} style={{ flexShrink: 0, width: 120, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "10px 11px", cursor: "pointer" }}
+                  onClick={function() { setSelected(item.scId); setSelectedVehicle(item.veh); selectedVehicleIdRef.current = item.veh.id; setRedrawTick(function(t) { return t + 1; }); }}>
                   <Logo short={s.short} color={s.color} tc={s.tc} size={28} />
                   <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginTop: 6, fontFamily: "'DM Sans',sans-serif" }}>{s.name}</div>
                   <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.label}</div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.text, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min"}</div>
                   <div style={{ fontSize: 10, color: T.muted, marginTop: 3, fontFamily: "'DM Sans',sans-serif" }}>🚶 {veh.dist} m</div>
-                  {veh.bat !== null && (
-                    <div style={{ marginTop: 5 }}>
-                      <div style={{ width: "100%", height: 4, background: T.border, borderRadius: 2, overflow: "hidden" }}>
-                        <div style={{ width: Math.round(veh.bat) + "%", height: "100%", background: s.color }} />
-                      </div>
-                      <div style={{ fontSize: 9, color: T.muted, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>🔋 {Math.round(veh.bat)}%</div>
-                    </div>
-                  )}
+                  {veh.rangeKm && <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>🔋 {veh.rangeKm} km</div>}
                 </div>
               );
-            });
+            }).concat(stationItems.map(function(item) {
+              var st = item.st, city = item.city;
+              return (
+                <div key={"station_" + (city.service || city.name)} style={{ flexShrink: 0, width: 120, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "10px 11px" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: city.color, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, position: "relative", flexDirection: "column" }}>
+                    <span style={{ lineHeight: 1 }}>🚲</span>
+                    <div style={{ position: "absolute", bottom: 4, left: 4, right: 4, height: 2, background: "rgba(255,255,255,0.7)", borderRadius: 1 }} />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginTop: 6, fontFamily: "'DM Sans',sans-serif" }}>{city.service || city.name}</div>
+                  <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Vélo en station</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.text, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>Gratuit {city.freeMins}min · {city.pMin}€/min</div>
+                  <div style={{ fontSize: 10, color: T.muted, marginTop: 3, fontFamily: "'DM Sans',sans-serif" }}>🚶 {st.dist} m</div>
+                </div>
+              );
+            }));
           })()}
         </div>
+        </>
+        )}
       </div>
+      )}
     </div>
   );
 }
@@ -1946,8 +2556,9 @@ function Detail(props) {
   var v = props.v;
   var T = props.T;
   var hasRoute = !!(props.fromAddr && props.toAddr);
-  var km = hasRoute ? Math.max(0.5, haversine(props.fromAddr.lat, props.fromAddr.lng, props.toAddr.lat, props.toAddr.lng) * 1.35) : 0;
-  var mins = hasRoute ? Math.round(km / 0.38) : 0;
+  var realRoute = useRealRoute(props.fromAddr || { lat: 0, lng: 0 }, props.toAddr);
+  var km   = realRoute ? realRoute.km   : (hasRoute ? Math.max(0.5, haversine(props.fromAddr.lat, props.fromAddr.lng, props.toAddr.lat, props.toAddr.lng) * 1.35) : 0);
+  var mins = realRoute ? realRoute.mins : (hasRoute ? Math.round(km / 0.38) : 0);
   var allPrices = Object.keys(PLATFORMS).map(function(id) {
     return { id: id, name: PLATFORMS[id].name, price: calcVtcPrice(id, km, mins) };
   }).sort(function(a, b) { return a.price - b.price; });
@@ -1972,8 +2583,8 @@ function Detail(props) {
             )}
           </div>
 
-          {hasRoute && <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 14 }}>
-            {[["⏱", v.eta + " min", "Arrivée"], ["🗺", formatDuration(mins), "Trajet"], ["📍", km.toFixed(1) + " km", "Distance"]].map(function(item) {
+          {hasRoute && <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, marginBottom: 14 }}>
+            {[["🗺", formatDuration(mins), "Trajet"], ["📍", km.toFixed(1) + " km", "Distance"]].map(function(item) {
               return (
                 <div key={item[2]} style={{ background: T.input, borderRadius: 10, padding: "9px 8px", textAlign: "center" }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{item[0]} {item[1]}</div>
@@ -2001,7 +2612,12 @@ function Detail(props) {
           </div>}
 
           <button
-            onClick={function() { openVtcApp(v.id, props.fromAddr, props.toAddr); }}
+            onClick={function() {
+              if (props.toAddr) {
+                logTrip({ mode: "vtc", operator: v.name, price: v.price, km: km, saved: Math.max(0, maxP - v.price), co2: 0 });
+              }
+              openVtcApp(v.id, props.fromAddr, props.toAddr);
+            }}
             disabled={!props.toAddr}
             style={{ width: "100%", background: props.toAddr ? T.accent : T.border, color: "#fff", border: "none", borderRadius: 14, padding: 15, fontSize: 15, fontWeight: 700, cursor: props.toAddr ? "pointer" : "not-allowed", fontFamily: "'DM Sans',sans-serif", marginBottom: 10, opacity: props.toAddr ? 1 : 0.5 }}
           >
@@ -2019,6 +2635,7 @@ function Detail(props) {
 // ── History ────────────────────────────────────────────────────────────────
 function History(props) {
   var T = props.T;
+  var tripStats = getTripStats();
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
@@ -2027,12 +2644,12 @@ function History(props) {
         <div style={{ fontSize: 12, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>Tous tes trajets en un coup d'œil</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, padding: "12px 12px 0" }}>
-        {[["47", "Trajets ce mois", "+12%"], ["83,40 €", "Dépenses", "−8%"], ["34,60 €", "Économies", "grâce à Mobio"], ["2,1 kg", "CO2 évité", "vs essence"]].map(function(item) {
+        {[[String(tripStats.count), "Trajets réservés", "via Mobio"], [tripStats.totalSpent.toFixed(2).replace(".",",") + " €", "Dépenses", "via Mobio"], [tripStats.totalSaved.toFixed(2).replace(".",",") + " €", "Économies", "grâce à Mobio"], [tripStats.totalCo2Kg.toFixed(1).replace(".",",") + " kg", "CO2 évité", "vs essence"]].map(function(item) {
           return (
             <div key={item[1]} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "11px 12px" }}>
               <div style={{ fontSize: 20, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{item[0]}</div>
               <div style={{ fontSize: 11, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{item[1]}</div>
-              <div style={{ fontSize: 10, color: "#34d186", marginTop: 3, fontWeight: 700, fontFamily: "'DM Sans',sans-serif" }}>{item[2]}</div>
+              <div style={{ fontSize: 10, color: T.muted, marginTop: 3, fontFamily: "'DM Sans',sans-serif" }}>{item[2]}</div>
             </div>
           );
         })}
@@ -2080,15 +2697,150 @@ function History(props) {
 }
 
 // ── Profile ────────────────────────────────────────────────────────────────
+// ── Authentification (Supabase) ─────────────────────────────────────────────
+function AuthScreen(props) {
+  var T = props.T;
+  var [mode, setMode] = useState("signin"); // "signin" ou "signup"
+  var [email, setEmail] = useState("");
+  var [password, setPassword] = useState("");
+  var [firstName, setFirstName] = useState("");
+  var [lastName, setLastName] = useState("");
+  var [birthdate, setBirthdate] = useState("");
+  var [error, setError] = useState(null);
+  var [loading, setLoading] = useState(false);
+
+  function handleSubmit() {
+    if (!email || !password) { setError("Remplis l'email et le mot de passe."); return; }
+
+    if (mode === "signup") {
+      if (!firstName || !lastName) { setError("Remplis ton prénom et ton nom."); return; }
+      if (!birthdate) { setError("Indique ta date de naissance."); return; }
+      var age = (Date.now() - new Date(birthdate).getTime()) / (365.25 * 24 * 3600 * 1000);
+      if (age < 16) { setError("Il faut avoir au moins 16 ans pour utiliser Mobio."); return; }
+      if (age > 120) { setError("Vérifie la date de naissance saisie."); return; }
+    }
+
+    setError(null);
+    setLoading(true);
+    var action = mode === "signin"
+      ? supabase.auth.signInWithPassword({ email: email, password: password })
+      : supabase.auth.signUp({ email: email, password: password, options: { emailRedirectTo: window.location.origin, data: { first_name: firstName, last_name: lastName, birthdate: birthdate } } });
+
+    action.then(function(result) {
+      setLoading(false);
+      if (result.error) { setError(result.error.message); return; }
+      if (mode === "signup" && !result.data.session) {
+        setError("Compte créé ! Vérifie tes emails pour confirmer ton adresse.");
+      }
+      // onAuthStateChange dans App() gère la suite automatiquement
+    });
+  }
+
+  function handleGoogle() {
+    setError(null);
+    supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin } });
+  }
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto", background: T.bg, padding: "40px 20px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+      <div style={{ textAlign: "center", marginBottom: 28 }}>
+        <div style={{ fontSize: 26, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>Mobio</div>
+        <div style={{ fontSize: 13, color: T.sub, marginTop: 4, fontFamily: "'DM Sans',sans-serif" }}>{mode === "signin" ? "Connecte-toi à ton compte" : "Crée ton compte"}</div>
+      </div>
+
+      <button onClick={handleGoogle}
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: 13, fontSize: 14, fontWeight: 700, color: T.text, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", marginBottom: 16 }}>
+        <span style={{ fontSize: 18 }}>🔑</span> Continuer avec Google
+      </button>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <div style={{ flex: 1, height: 1, background: T.border }} />
+        <span style={{ fontSize: 11, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>ou</span>
+        <div style={{ flex: 1, height: 1, background: T.border }} />
+      </div>
+
+      {mode === "signup" && (
+        <>
+          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+            <input type="text" placeholder="Prénom" value={firstName} onChange={function(e) { setFirstName(e.target.value); }}
+              style={{ flex: 1, background: T.input, border: "1px solid " + T.border, borderRadius: 12, padding: "12px 14px", fontSize: 14, color: T.text, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" }} />
+            <input type="text" placeholder="Nom" value={lastName} onChange={function(e) { setLastName(e.target.value); }}
+              style={{ flex: 1, background: T.input, border: "1px solid " + T.border, borderRadius: 12, padding: "12px 14px", fontSize: 14, color: T.text, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" }} />
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 11, color: T.muted, fontFamily: "'DM Sans',sans-serif", display: "block", marginBottom: 4 }}>Date de naissance</label>
+            <input type="date" value={birthdate} onChange={function(e) { setBirthdate(e.target.value); }}
+              style={{ width: "100%", background: T.input, border: "1px solid " + T.border, borderRadius: 12, padding: "12px 14px", fontSize: 14, color: T.text, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" }} />
+          </div>
+        </>
+      )}
+
+      <input type="email" placeholder="Email" value={email} onChange={function(e) { setEmail(e.target.value); }}
+        style={{ width: "100%", background: T.input, border: "1px solid " + T.border, borderRadius: 12, padding: "12px 14px", fontSize: 14, color: T.text, fontFamily: "'DM Sans',sans-serif", marginBottom: 10, outline: "none", boxSizing: "border-box" }} />
+      <input type="password" placeholder="Mot de passe" value={password} onChange={function(e) { setPassword(e.target.value); }}
+        style={{ width: "100%", background: T.input, border: "1px solid " + T.border, borderRadius: 12, padding: "12px 14px", fontSize: 14, color: T.text, fontFamily: "'DM Sans',sans-serif", marginBottom: 14, outline: "none", boxSizing: "border-box" }} />
+
+      {error && <div style={{ fontSize: 12, color: "#c0392b", marginBottom: 12, fontFamily: "'DM Sans',sans-serif" }}>{error}</div>}
+
+      <button onClick={handleSubmit} disabled={loading}
+        style={{ width: "100%", background: T.accent, color: "#fff", border: "none", borderRadius: 12, padding: 14, fontSize: 14, fontWeight: 700, cursor: loading ? "default" : "pointer", fontFamily: "'DM Sans',sans-serif", opacity: loading ? 0.6 : 1, marginBottom: 14 }}>
+        {loading ? "Patiente…" : mode === "signin" ? "Se connecter" : "Créer mon compte"}
+      </button>
+
+      <div style={{ textAlign: "center", fontSize: 13, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>
+        {mode === "signin" ? "Pas encore de compte ? " : "Déjà un compte ? "}
+        <span onClick={function() { setMode(mode === "signin" ? "signup" : "signin"); setError(null); }}
+          style={{ color: T.accent, fontWeight: 700, cursor: "pointer" }}>
+          {mode === "signin" ? "Créer un compte" : "Se connecter"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function Profile(props) {
   var T = props.T;
+  var tripStats = getTripStats();
   var [eco,        setEco]        = useState(true);
-  var [alertS,     setAlertS]     = useState(true);
-  var [alertSc,    setAlertSc]    = useState(true);
-  var [alertW,     setAlertW]     = useState(false);
+  var radius = parseInt(localStorage.getItem("mobio_radius") || "800");
+  var [searchRadius, setSearchRadius] = useState(radius);
+
+  function updateRadius(val) {
+    setSearchRadius(val);
+    localStorage.setItem("mobio_radius", String(val));
+  }
   var [showAbout,  setShowAbout]  = useState(false);
-  var [legalModal, setLegalModal] = useState(null); // 'cgu' | 'privacy' | 'cookies'
+  var [legalModal, setLegalModal] = useState(null);
+  var [avatarUrl,  setAvatarUrl]  = useState(null);
+  var [avatarLoading, setAvatarLoading] = useState(false);
   var connected = ["uber", "bolt", "lime"];
+  var avatarInputRef = useRef(null);
+
+  // Charger la photo de profil depuis Supabase Storage au démarrage
+  useEffect(function() {
+    if (!props.session) return;
+    var userId = props.session.user.id;
+    var url = supabase.storage.from("avatars").getPublicUrl(userId + "/avatar.jpg").data.publicUrl;
+    // Vérifier que le fichier existe vraiment avant d'afficher
+    fetch(url, { method: "HEAD" }).then(function(r) {
+      if (r.ok) setAvatarUrl(url + "?t=" + Date.now());
+    }).catch(function() {});
+  }, [props.session]);
+
+  function handleAvatarChange(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert("Photo trop lourde (max 2 Mo)"); return; }
+    setAvatarLoading(true);
+    var userId = props.session.user.id;
+    supabase.storage.from("avatars").upload(userId + "/avatar.jpg", file, { upsert: true, contentType: file.type })
+      .then(function(result) {
+        setAvatarLoading(false);
+        if (result.error) { alert("Erreur upload : " + result.error.message); return; }
+        var url = supabase.storage.from("avatars").getPublicUrl(userId + "/avatar.jpg").data.publicUrl;
+        setAvatarUrl(url + "?t=" + Date.now());
+      });
+  }
 
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
@@ -2096,15 +2848,35 @@ function Profile(props) {
       {/* Header sombre */}
       <div style={{ background: "#1a1a2e", padding: "18px 16px 16px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,.15)", border: "2px solid rgba(255,255,255,.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif" }}>TM</div>
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif" }}>Thomas Martin</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.55)", fontFamily: "'DM Sans',sans-serif" }}>thomas@gmail.com</div>
+          {/* Avatar cliquable */}
+          <div onClick={function() { avatarInputRef.current && avatarInputRef.current.click(); }}
+            style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(255,255,255,.15)", border: "2px solid rgba(255,255,255,.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: "#fff", cursor: "pointer", overflow: "hidden", flexShrink: 0, position: "relative" }}>
+            {avatarLoading ? (
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,.7)" }}>...</div>
+            ) : avatarUrl ? (
+              <img src={avatarUrl} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <span>👤</span>
+            )}
+            <div style={{ position: "absolute", bottom: 0, right: 0, background: "rgba(0,0,0,.5)", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9 }}>✏️</div>
           </div>
-          <div style={{ marginLeft: "auto", background: "rgba(52,209,134,.2)", border: "1px solid rgba(52,209,134,.4)", color: "#34d186", fontSize: 10, fontWeight: 700, padding: "4px 11px", borderRadius: 20, fontFamily: "'DM Sans',sans-serif" }}>Pro</div>
+          <input ref={avatarInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleAvatarChange} />
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif" }}>{(function() {
+              var meta = props.session.user.user_metadata || {};
+              if (meta.first_name) return meta.first_name + " " + (meta.last_name || "");
+              if (meta.full_name) return meta.full_name; // connexion Google
+              return "Mon compte";
+            })()}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.55)", fontFamily: "'DM Sans',sans-serif" }}>{props.session.user.email}</div>
+          </div>
+          <button onClick={function() { supabase.auth.signOut(); }}
+            style={{ marginLeft: "auto", background: "rgba(255,255,255,.1)", border: "1px solid rgba(255,255,255,.2)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "6px 12px", borderRadius: 20, fontFamily: "'DM Sans',sans-serif", cursor: "pointer" }}>
+            Déconnexion
+          </button>
         </div>
         <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-          {[["47","Trajets"],["34,60 €","Économisés"],["2,1 kg","CO2"]].map(function(item) {
+          {[[String(tripStats.count),"Trajets"],[tripStats.totalSaved.toFixed(2).replace(".",",") + " €","Économisés"],[tripStats.totalCo2Kg.toFixed(1).replace(".",",") + " kg","CO2"]].map(function(item) {
             return (
               <div key={item[1]} style={{ flex: 1, background: "rgba(255,255,255,.08)", borderRadius: 10, padding: 8, textAlign: "center" }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif" }}>{item[0]}</div>
@@ -2200,9 +2972,6 @@ function Profile(props) {
           {[
             ["🌙", "Mode sombre",  "Thème nuit",                          props.dark, function() { props.setDark(!props.dark); }],
             ["🌿", "Mode éco",     "Véhicules électriques en priorité",   eco,        function() { setEco(!eco); }],
-            ["🔔", "Alertes prix dynamiques","Hausse de prix détectée",               alertS,     function() { setAlertS(!alertS); }],
-            ["🛴", "Trottinette proche", "Lime dispo < 100m",            alertSc,    function() { setAlertSc(!alertSc); }],
-            ["📊", "Résumé hebdo", "Chaque lundi matin",                  alertW,     function() { setAlertW(!alertW); }],
           ].map(function(item, i, arr) {
             return (
               <div key={item[1]} style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 13px", borderBottom: i < arr.length - 1 ? "1px solid " + T.bsub : "none" }}>
@@ -2215,6 +2984,28 @@ function Profile(props) {
               </div>
             );
           })}
+        </div>
+
+        {/* Rayon de recherche */}
+        <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 8, fontFamily: "'DM Sans',sans-serif" }}>Rayon de recherche</div>
+        <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: "12px 14px", marginBottom: 14 }}>
+          <div style={{ fontSize: 13, color: T.text, fontFamily: "'DM Sans',sans-serif", marginBottom: 4 }}>
+            📍 Afficher les véhicules dans un rayon de <strong>{searchRadius >= 1000 ? (searchRadius/1000).toFixed(1) + " km" : searchRadius + " m"}</strong>
+          </div>
+          <div style={{ fontSize: 11, color: T.muted, fontFamily: "'DM Sans',sans-serif", marginBottom: 10 }}>S'applique à la carte et au comparateur</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {[300, 500, 800, 1500, 2000].map(function(r) {
+              return (
+                <button key={r} onClick={function() { updateRadius(r); }}
+                  style={{ flex: 1, padding: "6px 0", borderRadius: 10, border: "1px solid " + T.border,
+                    background: searchRadius === r ? T.accent : T.input,
+                    color: searchRadius === r ? "#fff" : T.sub,
+                    fontSize: 10, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                  {r >= 1000 ? (r/1000).toFixed(1) + "km" : r + "m"}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* À propos */}
@@ -2469,8 +3260,16 @@ function NotifPanel(props) {
 // ── App ────────────────────────────────────────────────────────────────────
 function App() {
   var [tab, setTab]           = useState("compare");
-  var [fromAddr, setFromAddr] = useState({ label: "Gare du Nord", lat: 48.8809, lng: 2.3553 });
+  var [session, setSession]   = useState(undefined); // undefined = chargement, null = pas connecté
+  var [fromAddr, setFromAddr] = useState({ label: "Recherche de ta position…", lat: 48.8566, lng: 2.3522 });
   var [geoLoading, setGeoLoading] = useState(false);
+
+  // Suivi de la session Supabase (connexion/déconnexion en temps réel)
+  useEffect(function() {
+    supabase.auth.getSession().then(function(result) { setSession(result.data.session); });
+    var sub = supabase.auth.onAuthStateChange(function(event, newSession) { setSession(newSession); });
+    return function() { sub.data.subscription.unsubscribe(); };
+  }, []);
 
   // Géolocalisation automatique au lancement
   useEffect(function() {
@@ -2498,15 +3297,38 @@ function App() {
           setGeoLoading(false);
         }
       },
-      function() { setGeoLoading(false); }, // Refus ou erreur
+      function() {
+        setGeoLoading(false);
+        setFromAddr({ label: "Position non disponible — touche pour la définir", lat: 48.8566, lng: 2.3522 });
+      }, // Refus ou erreur
       { timeout: 8000, maximumAge: 60000 }
     );
+
+    // Suivi de position en continu — mise à jour uniquement si on a bougé de plus de 50m
+    // pour éviter de recalculer inutilement et préserver la batterie
+    var lastLat = null, lastLng = null;
+    var watchId = navigator.geolocation.watchPosition(
+      function(pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+        // Ignorer les positions avec précision trop faible (IP-based = Paris sur CodeSandbox)
+        if (pos.coords.accuracy > 5000) return;
+        if (lastLat !== null && distMeters(lastLat, lastLng, lat, lng) < 50) return;
+        lastLat = lat; lastLng = lng;
+        setFromAddr(function(prev) { return { label: prev ? prev.label : "Ma position", lat: lat, lng: lng }; });
+      },
+      function() {},
+      { enableHighAccuracy: false, maximumAge: 15000, timeout: 10000 }
+    );
+    return function() { navigator.geolocation.clearWatch(watchId); };
   }, []);
   var [toAddr,   setToAddr]   = useState(null);
   var [vehicle, setVehicle]   = useState(null);
   var [favModal, setFavModal] = useState(null);
   var [onboarded, setOnboarded] = useState(false);
   var [dark, setDark]         = useState(false);
+  var [searchRadius, setSearchRadius] = useState(parseInt(localStorage.getItem("mobio_radius") || "800"));
+  window.mobioRadius = searchRadius;
   var [notifs, setNotifs]     = useState(NOTIF_TEMPLATES);
   var [showNotifs, setShowNotifs] = useState(false);
   var [toast, setToast]       = useState(null);
@@ -2529,30 +3351,57 @@ function App() {
   function markRead(id) {
     setNotifs(function(prev) { return prev.map(function(n) { return n.id === id ? Object.assign({}, n, { read: true }) : n; }); });
   }
-  var [favs, setFavs]         = useState([
+  var DEFAULT_FAVS = [
     { id: "home", icon: "🏠", label: "Domicile", addr: null, lat: null, lng: null },
     { id: "work", icon: "💼", label: "Bureau",   addr: null, lat: null, lng: null },
-  ]);
+  ];
+
+  var [favs, setFavs] = useState(DEFAULT_FAVS);
+
+  // Charger les favoris depuis Supabase au démarrage (si connecté)
+  useEffect(function() {
+    if (!session || !session.user) { setFavs(DEFAULT_FAVS); return; } // pas connecté → favoris locaux par défaut, pas d'appel Supabase
+    supabase.from("favorites").select("*").eq("user_id", session.user.id)
+      .then(function(result) {
+        if (result.error || !result.data || result.data.length === 0) return;
+        // Fusionner avec les favoris par défaut (home/work), en priorité les données Supabase
+        var remote = result.data;
+        var merged = DEFAULT_FAVS.map(function(def) {
+          var found = remote.filter(function(r) { return r.id === def.id; })[0];
+          return found ? { id: found.id, icon: found.icon, label: found.label, addr: found.addr, lat: found.lat, lng: found.lng } : def;
+        });
+        var extras = remote.filter(function(r) { return r.id !== "home" && r.id !== "work"; })
+          .map(function(r) { return { id: r.id, icon: r.icon, label: r.label, addr: r.addr, lat: r.lat, lng: r.lng }; });
+        setFavs(merged.concat(extras));
+      });
+  }, [session]);
 
   var T = dark ? DARK : LIGHT;
 
+  function upsertFav(fav) {
+    if (!session) return;
+    supabase.from("favorites").upsert({
+      id: fav.id, user_id: session.user.id,
+      icon: fav.icon, label: fav.label, addr: fav.addr, lat: fav.lat, lng: fav.lng
+    }, { onConflict: "id,user_id" });
+  }
+
   function saveFav(sel, custom) {
     if (favModal.mode === "new" && custom) {
-      setFavs(function(prev) {
-        return prev.concat([{ id: "f" + Date.now(), icon: custom.icon, label: custom.label, addr: sel.label, lat: sel.lat, lng: sel.lng }]);
-      });
+      var newFav = { id: "f" + Date.now(), icon: custom.icon, label: custom.label, addr: sel.label, lat: sel.lat, lng: sel.lng };
+      setFavs(function(prev) { return prev.concat([newFav]); });
+      upsertFav(newFav);
     } else if (favModal.fav) {
-      setFavs(function(prev) {
-        return prev.map(function(f) {
-          return f.id === favModal.fav.id ? Object.assign({}, f, { addr: sel.label, lat: sel.lat, lng: sel.lng }) : f;
-        });
-      });
+      var updated = Object.assign({}, favModal.fav, { addr: sel.label, lat: sel.lat, lng: sel.lng });
+      setFavs(function(prev) { return prev.map(function(f) { return f.id === favModal.fav.id ? updated : f; }); });
+      upsertFav(updated);
     }
     setFavModal(null);
   }
 
   function removeFav(id) {
     setFavs(function(prev) { return prev.filter(function(f) { return f.id !== id; }); });
+    if (session) supabase.from("favorites").delete().eq("id", id).eq("user_id", session.user.id);
   }
 
   return (
@@ -2561,9 +3410,17 @@ function App() {
       <style>{"@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}"}</style>
       {!onboarded && <Onboarding onDone={function() { setOnboarded(true); }} />}
       {tab === "compare" && <Compare T={T} onVehicle={setVehicle} favs={favs} onFav={function(f, m) { setFavModal({ fav: f, mode: m }); }} onBell={function() { setShowNotifs(true); }} unreadCount={unreadCount} fromAddr={fromAddr} toAddr={toAddr} setFromAddr={setFromAddr} setToAddr={setToAddr} geoLoading={geoLoading} />}
-      {tab === "map"     && <MapView T={T} fromAddr={fromAddr} toAddr={toAddr} onVehicle={setVehicle} />}
+      {tab === "map"     && <MapView T={T} fromAddr={fromAddr} toAddr={toAddr} onVehicle={setVehicle} setFromAddr={setFromAddr} setToAddr={setToAddr} />}
       {tab === "history" && <History T={T} />}
-      {tab === "profile" && <Profile T={T} favs={favs} onFav={function(f, m) { setFavModal({ fav: f, mode: m }); }} onRemoveFav={removeFav} dark={dark} setDark={setDark} onTestNotif={triggerToast} />}
+      {tab === "profile" && (
+        session === undefined ? (
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Chargement…</div>
+        ) : !session ? (
+          <AuthScreen T={T} />
+        ) : (
+          <Profile T={T} session={session} favs={favs} onFav={function(f, m) { setFavModal({ fav: f, mode: m }); }} onRemoveFav={removeFav} dark={dark} setDark={setDark} onTestNotif={triggerToast} />
+        )
+      )}
       <BottomNav T={T} tab={tab} setTab={setTab} />
       {toast    && <Toast T={T} notif={toast} onClose={function() { setToast(null); }} />}
       {showNotifs && <NotifPanel T={T} dark={dark} notifs={notifs} onClose={function() { setShowNotifs(false); }} onMarkAll={markAllRead} onRead={markRead} />}

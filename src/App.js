@@ -1409,21 +1409,6 @@ function Compare(props) {
           })}
         </div>}
 
-        {/* Sélecteur passagers — uniquement pour les VTC */}
-        {tab === "vtc" && (
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, background: T.input, borderRadius: 10, padding: "8px 12px" }}>
-          <span style={{ fontSize: 16 }}>👥</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif", flex: 1 }}>
-            {passengers === 1 ? "1 passager" : passengers + " passagers"}
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button onClick={function() { setPassengers(function(p) { return Math.max(1, p - 1); }); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid " + T.border, background: T.card, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: T.text }}>−</button>
-            <span style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif", minWidth: 16, textAlign: "center" }}>{passengers}</span>
-            <button onClick={function() { setPassengers(function(p) { return Math.min(7, p + 1); }); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid " + T.border, background: T.card, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: T.text }}>+</button>
-          </div>
-        </div>
-        )}
-
         <div style={{ display: "flex", borderBottom: "1px solid " + T.border, marginLeft: -16, marginRight: -16, paddingLeft: 16 }}>
           {[["vtc", "Véhicules"], ["micro", "Micro-mobilité"]].map(function(item) {
             return (
@@ -1458,6 +1443,21 @@ function Compare(props) {
                 ⓘ
               </button>
             </div>
+
+            {/* Sélecteur passagers — uniquement pour les VTC */}
+            {vtcSubFilter === "vtc" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, background: T.input, borderRadius: 10, padding: "8px 12px" }}>
+              <span style={{ fontSize: 16 }}>👥</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif", flex: 1 }}>
+                {passengers === 1 ? "1 passager" : passengers + " passagers"}
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button onClick={function() { setPassengers(function(p) { return Math.max(1, p - 1); }); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid " + T.border, background: T.card, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: T.text }}>−</button>
+                <span style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif", minWidth: 16, textAlign: "center" }}>{passengers}</span>
+                <button onClick={function() { setPassengers(function(p) { return Math.min(7, p + 1); }); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid " + T.border, background: T.card, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: T.text }}>+</button>
+              </div>
+            </div>
+            )}
 
             {vtcSubFilter === "vtc" && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fff3cd", color: "#854f0b", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, fontFamily: "'DM Sans',sans-serif", marginBottom: 10 }}>
@@ -3431,3 +3431,4 @@ function App() {
 }
 
 export default App;
+        

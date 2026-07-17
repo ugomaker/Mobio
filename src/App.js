@@ -2405,8 +2405,8 @@ function MapView(props) {
             }
 
             // Liste statique des villes sans certains types (vérifiée manuellement)
-            var NO_SCOOTERS   = ["toulouse", "montpellier", "nantes", "rennes", "reims"];
-            var NO_FREE_BIKES = ["nantes", "rennes", "reims"];
+            var NO_SCOOTERS   = ["toulouse", "montpellier", "nantes", "rennes", "reims", "nancy", "clermont"];
+            var NO_FREE_BIKES = ["nantes", "rennes", "reims", "nancy", "clermont"];
             var NO_STATIONS   = ["reims"]; // toutes les grandes villes ont des vélos en station — à compléter au cas par cas
             var HAS_MOPEDS    = ["bordeaux", "toulouse", "nice"];
             var detectedCity = detectCity(props.fromAddr ? props.fromAddr.lat : 0, props.fromAddr ? props.fromAddr.lng : 0) || "";
@@ -3431,4 +3431,3 @@ function App() {
 }
 
 export default App;
-        

@@ -391,12 +391,15 @@ function AddrInput(props) {
     timerRef.current = setTimeout(function() {
       // Search Box API — gère à la fois les adresses ET les lieux/enseignes (IKEA, McDonald's...),
       // contrairement à l'ancienne Geocoding v5 qui n'a plus du tout de données POI.
+      var proximityParam = props.userLat && props.userLng
+        ? "&proximity=" + props.userLng + "," + props.userLat
+        : "";
       fetch(
         "https://api.mapbox.com/search/searchbox/v1/suggest?q=" +
         encodeURIComponent(val) +
         "&access_token=" + MAPBOX_TOKEN +
         "&session_token=" + sessionTokenRef.current +
-        "&language=fr&limit=6&country=fr"
+        "&language=fr&limit=6&country=fr" + proximityParam
       )
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -2206,8 +2209,8 @@ function MapView(props) {
 
       {/* Barre de recherche */}
       <div style={{ background: T.card, padding: "10px 14px", borderBottom: "1px solid " + T.border, display: "flex", flexDirection: "column", gap: 8 }}>
-        <AddrInput value={props.fromAddr ? props.fromAddr.label : ""} dot="#34d186" ph="Départ" onSelect={function(p) { props.setFromAddr && props.setFromAddr(p); }} T={T} />
-        <AddrInput value={props.toAddr ? props.toAddr.label : ""} dot={T.accent} ph="Où voulez-vous aller ?" onSelect={function(p) { props.setToAddr && props.setToAddr(p); }} T={T} />
+        <AddrInput value={props.fromAddr ? props.fromAddr.label : ""} dot="#34d186" ph="Départ" onSelect={function(p) { props.setFromAddr && props.setFromAddr(p); }} T={T} userLat={props.fromAddr ? props.fromAddr.lat : null} userLng={props.fromAddr ? props.fromAddr.lng : null} />
+        <AddrInput value={props.toAddr ? props.toAddr.label : ""} dot={T.accent} ph="Où voulez-vous aller ?" onSelect={function(p) { props.setToAddr && props.setToAddr(p); }} T={T} userLat={props.fromAddr ? props.fromAddr.lat : null} userLng={props.fromAddr ? props.fromAddr.lng : null} />
       </div>
 
       {/* Carte */}
@@ -2820,7 +2823,7 @@ function Profile(props) {
   useEffect(function() {
     if (!props.session) return;
     var userId = props.session.user.id;
-    var url = supabase.storage.from("avatars").getPublicUrl(userId + "/avatar.jpg").data.publicUrl;
+    var url = supabase.storage.from("Avatar").getPublicUrl(userId + "/avatar.jpg").data.publicUrl;
     // Vérifier que le fichier existe vraiment avant d'afficher
     fetch(url, { method: "HEAD" }).then(function(r) {
       if (r.ok) setAvatarUrl(url + "?t=" + Date.now());
@@ -2831,14 +2834,23 @@ function Profile(props) {
     var file = e.target.files && e.target.files[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) { alert("Photo trop lourde (max 2 Mo)"); return; }
+    // Afficher immédiatement l'image localement (avant même l'upload)
+    var localUrl = URL.createObjectURL(file);
+    setAvatarUrl(localUrl);
     setAvatarLoading(true);
     var userId = props.session.user.id;
-    supabase.storage.from("avatars").upload(userId + "/avatar.jpg", file, { upsert: true, contentType: file.type })
+    var ext = file.name.split(".").pop().toLowerCase() || "jpg";
+    var path = userId + "/avatar." + ext;
+    supabase.storage.from("Avatar").upload(path, file, { upsert: true, contentType: file.type })
       .then(function(result) {
         setAvatarLoading(false);
         if (result.error) { alert("Erreur upload : " + result.error.message); return; }
-        var url = supabase.storage.from("avatars").getPublicUrl(userId + "/avatar.jpg").data.publicUrl;
+        // Remplacer l'URL locale par l'URL Supabase permanente
+        var url = supabase.storage.from("Avatar").getPublicUrl(path).data.publicUrl;
         setAvatarUrl(url + "?t=" + Date.now());
+      }).catch(function(err) {
+        setAvatarLoading(false);
+        alert("Erreur : " + err.message);
       });
   }
 
@@ -2956,16 +2968,6 @@ function Profile(props) {
         })}
 
         {/* Notifications */}
-        <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 8, fontFamily: "'DM Sans',sans-serif" }}>Notifications</div>
-        <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: "12px 14px", marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: T.input, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>🔔</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>Tester une notification</div>
-            <div style={{ fontSize: 11, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Voir à quoi ça ressemble</div>
-          </div>
-          <button onClick={props.onTestNotif} style={{ background: T.accent, color: "#fff", border: "none", borderRadius: 10, padding: "7px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>Tester</button>
-        </div>
-
         {/* Préférences */}
         <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 8, fontFamily: "'DM Sans',sans-serif" }}>Préférences</div>
         <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>

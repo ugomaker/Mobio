@@ -4091,9 +4091,21 @@ function NotifPanel(props) {
 // ── App ────────────────────────────────────────────────────────────────────
 function App() {
   var [tab, setTab]           = useState("compare");
-  var [session, setSession]   = useState(undefined); // undefined = chargement, null = pas connecté
+  var [session, setSession]   = useState(undefined);
   var [fromAddr, setFromAddr] = useState({ label: "Recherche de ta position…", lat: 48.8566, lng: 2.3522 });
   var [geoLoading, setGeoLoading] = useState(false);
+
+  // Bloquer le scroll horizontal — format app mobile
+  useEffect(function() {
+    document.body.style.overflowX = "hidden";
+    document.documentElement.style.overflowX = "hidden";
+    document.body.style.maxWidth = "100vw";
+    document.body.style.touchAction = "pan-y";
+    return function() {
+      document.body.style.overflowX = "";
+      document.documentElement.style.overflowX = "";
+    };
+  }, []);
 
   // Suivi de la session Supabase (connexion/déconnexion en temps réel)
   useEffect(function() {

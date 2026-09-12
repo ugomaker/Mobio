@@ -3132,30 +3132,27 @@ function MapView(props) {
 
       {/* Panneau filtre opérateurs */}
       {filter === "micro" && showOpFilter && (function() {
-        // Collecter les opérateurs uniques présents dans les véhicules chargés
         var ops = {};
         (gbfs.vehicles || []).forEach(function(v) {
           var s = SCOOTERS[v.scId];
-          if (s && !ops[s.name]) ops[s.name] = { color: s.color, id: v.scId };
+          if (s && !ops[s.name]) ops[s.name] = s.color;
         });
-        var opList = Object.entries(ops);
-        if (opList.length === 0) return null;
+        var opList = Object.keys(ops);
+        if (opList.length === 0) return <div style={{ background: T.card, padding: "8px 12px", fontSize: 12, color: T.muted }}>Aucun opérateur détecté</div>;
         return (
           <div style={{ background: T.card, padding: "8px 12px", borderTop: "1px solid " + T.border, display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {opList.map(function(entry) {
-              var name = entry[0], info = entry[1];
+            {opList.map(function(name) {
+              var color = ops[name];
               var hidden = hiddenOps[name];
               return (
                 <button key={name} onClick={function() {
-                  setHiddenOps(function(prev) {
-                    var next = Object.assign({}, prev);
-                    if (next[name]) delete next[name]; else next[name] = true;
-                    return next;
-                  });
+                  var next = Object.assign({}, hiddenOps);
+                  if (next[name]) delete next[name]; else next[name] = true;
+                  setHiddenOps(next);
                   setRedrawTick(function(t) { return t + 1; });
                 }}
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 20, border: "2px solid " + info.color, background: hidden ? T.input : info.color, color: hidden ? T.sub : "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", opacity: hidden ? 0.5 : 1 }}>
-                  {!hidden && <span>✓</span>}{name}
+                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, border: "2px solid " + color, background: hidden ? "transparent" : color, color: hidden ? color : "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                  {hidden ? "○" : "✓"} {name}
                 </button>
               );
             })}

@@ -2313,28 +2313,34 @@ function Compare(props) {
 // ── Map Mapbox ─────────────────────────────────────────────────────────────
 
 function OpFilterPanel(props) {
-  var gbfs = props.gbfs, T = props.T, hiddenOps = props.hiddenOps;
-  var ops = {};
-  (gbfs.vehicles || []).forEach(function(v) {
-    var s = SCOOTERS[v.scId];
-    if (s && !ops[s.name]) ops[s.name] = s.color;
-  });
-  var opList = Object.keys(ops);
-  if (opList.length === 0) return null;
+  var T = props.T;
+  var hiddenOps = props.hiddenOps;
+  // Opérateurs connus avec leurs couleurs
+  var KNOWN_OPS = [
+    { name: "Lime",    color: "#00c853" },
+    { name: "Dott",    color: "#ff4a17" },
+    { name: "Voi",     color: "#ff3366" },
+    { name: "Bird",    color: "#111111" },
+    { name: "Pony",    color: "#f5a623" },
+    { name: "EcoVelo", color: "#2d9e47" },
+  ];
   return (
     <div style={{ background: T.card, padding: "8px 12px", borderTop: "1px solid " + T.border, display: "flex", flexWrap: "wrap", gap: 8 }}>
-      {opList.map(function(name) {
-        var color = ops[name];
-        var hidden = hiddenOps[name];
+      {KNOWN_OPS.map(function(op) {
+        var hidden = hiddenOps[op.name];
         return (
-          <button key={name} onClick={function() {
+          <button key={op.name} onClick={function() {
             var next = Object.assign({}, hiddenOps);
-            if (next[name]) delete next[name]; else next[name] = true;
+            if (next[op.name]) delete next[op.name]; else next[op.name] = true;
             props.setHiddenOps(next);
             props.setRedrawTick(function(t) { return t + 1; });
           }}
-            style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, border: "2px solid " + color, background: hidden ? "transparent" : color, color: hidden ? color : "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
-            {hidden ? "○" : "✓"} {name}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20,
+              border: "2px solid " + op.color,
+              background: hidden ? "transparent" : op.color,
+              color: hidden ? op.color : "#fff",
+              fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+            {hidden ? "○" : "✓"} {op.name}
           </button>
         );
       })}
@@ -3161,7 +3167,7 @@ function MapView(props) {
       </div>
 
       {/* Panneau filtre opérateurs */}
-      {filter === "micro" && showOpFilter && <OpFilterPanel gbfs={gbfs} T={T} hiddenOps={hiddenOps} setHiddenOps={setHiddenOps} setRedrawTick={setRedrawTick} />}
+      {filter === "micro" && showOpFilter && <OpFilterPanel T={T} hiddenOps={hiddenOps} setHiddenOps={setHiddenOps} setRedrawTick={setRedrawTick} />}
 
       {/* Sous-filtres — niveau 2 */}
       {(filter === "vehicules" || filter === "micro") && (

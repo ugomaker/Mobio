@@ -3160,8 +3160,8 @@ function MapView(props) {
         )}
       </div>
 
-        {/* Panneau filtre opérateurs */}
-        {filter === "micro" && showOpFilter && OpFilterPanel({ gbfs: gbfs, T: T, hiddenOps: hiddenOps, setHiddenOps: setHiddenOps, setRedrawTick: setRedrawTick })}
+      {/* Panneau filtre opérateurs */}
+      {filter === "micro" && showOpFilter && <OpFilterPanel gbfs={gbfs} T={T} hiddenOps={hiddenOps} setHiddenOps={setHiddenOps} setRedrawTick={setRedrawTick} />}
 
       {/* Sous-filtres — niveau 2 */}
       {(filter === "vehicules" || filter === "micro") && (

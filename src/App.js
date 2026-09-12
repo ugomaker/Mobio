@@ -3210,7 +3210,7 @@ function MapView(props) {
           ) : (
             <div style={{ padding: "18px 16px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>{t("map_enter_dest_rien")}</div>
           )
-        ) : (!subFilter || subFilter === "vtc") ? (
+        ) : (filter === "vehicules" && (!subFilter || subFilter === "vtc")) ? (
           <div style={{ textAlign: "center", padding: "28px 20px", color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>
             <div style={{ fontSize: 32, marginBottom: 10 }}>🚗</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 6 }}>{t("coming_soon")}</div>

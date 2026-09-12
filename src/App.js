@@ -2928,6 +2928,28 @@ function MapView(props) {
       try { if (mapboxRef.current.getLayer("route")) mapboxRef.current.removeLayer("route"); } catch(e) {}
       try { if (mapboxRef.current.getSource("route")) mapboxRef.current.removeSource("route"); } catch(e) {}
     }
+    // Redessiner le tracé piéton si on revient sur "rien" avec une destination
+    if (filter === "rien" && toAddrRef.current && fromAddrRef.current) {
+      var fa = fromAddrRef.current;
+      var ta = toAddrRef.current;
+      // Vérifier si le tracé piéton existe déjà
+      var map = mapboxRef.current;
+      if (!map.getSource("walking-route-rien")) {
+        fetch("https://api.mapbox.com/directions/v5/mapbox/walking/" +
+          fa.lng + "," + fa.lat + ";" + ta.lng + "," + ta.lat +
+          "?geometries=geojson&access_token=" + MAPBOX_TOKEN)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (!d.routes || !d.routes[0]) return;
+          try {
+            map.addSource("walking-route-rien", { type: "geojson", data: d.routes[0].geometry });
+            map.addLayer({ id: "walking-route-rien", type: "line", source: "walking-route-rien",
+              paint: { "line-color": "#00b341", "line-width": 4, "line-dasharray": [1, 1.5], "line-opacity": 0.95 }
+            });
+          } catch(e) {}
+        }).catch(function() {});
+      }
+    }
     addMarkers(mapboxRef.current, filter, subFilter);
   }, [filter, subFilter]);
 
@@ -4095,13 +4117,27 @@ function App() {
   var [fromAddr, setFromAddr] = useState({ label: "Recherche de ta position…", lat: 48.8566, lng: 2.3522 });
   var [geoLoading, setGeoLoading] = useState(false);
 
-  // Bloquer le scroll horizontal — format app mobile
+  // Bloquer le scroll horizontal et le zoom — format app mobile
   useEffect(function() {
     document.body.style.overflowX = "hidden";
     document.documentElement.style.overflowX = "hidden";
     document.body.style.maxWidth = "100vw";
     document.body.style.touchAction = "pan-y";
+    // Bloquer le pinch-to-zoom sauf sur la carte Mapbox
+    function preventZoom(e) {
+      if (e.touches && e.touches.length > 1) {
+        var target = e.target;
+        // Autoriser le zoom uniquement sur la carte Mapbox
+        while (target) {
+          if (target.classList && (target.classList.contains("mapboxgl-map") || target.classList.contains("mapboxgl-canvas"))) return;
+          target = target.parentElement;
+        }
+        e.preventDefault();
+      }
+    }
+    document.addEventListener("touchstart", preventZoom, { passive: false });
     return function() {
+      document.removeEventListener("touchstart", preventZoom);
       document.body.style.overflowX = "";
       document.documentElement.style.overflowX = "";
     };

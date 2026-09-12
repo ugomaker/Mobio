@@ -1959,11 +1959,11 @@ function Compare(props) {
 
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
-      <div style={{ background: T.card, padding: "18px 16px 14px", borderBottom: "1px solid " + T.border }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>Mobio</div>
-            <div style={{ fontSize: 12, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{t("compare_sub")}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5, color: "#fff" }}>Mobio</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{t("compare_sub")}</div>
           </div>
           <button
             onClick={props.onBell}
@@ -2968,7 +2968,7 @@ function MapView(props) {
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
       {/* Barre de recherche */}
-      <div style={{ background: T.card, padding: "10px 14px", borderBottom: "1px solid " + T.border, display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ background: "#1a1a2e", padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
         <AddrInput value={props.fromAddr ? props.fromAddr.label : ""} dot="#34d186" ph={t("map_depart")} onSelect={function(p) { props.setFromAddr && props.setFromAddr(p); }} T={T} userLat={props.fromAddr ? props.fromAddr.lat : null} userLng={props.fromAddr ? props.fromAddr.lng : null} />
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ flex: 1 }}>
@@ -3451,9 +3451,9 @@ function History(props) {
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
-      <div style={{ background: T.card, padding: "18px 16px 14px", borderBottom: "1px solid " + T.border }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
-        <div style={{ fontSize: 12, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{t("history_sub")}</div>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px" }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
+        <div style={{ fontSize: 12, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif", color: "rgba(255,255,255,.6)" }}>{t("history_sub")}</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, padding: "12px 12px 0" }}>
         {[[String(tripStats.count), t("history_trips"), t("history_via")], [tripStats.totalSpent.toFixed(2).replace(".",",") + " €", t("history_spent"), t("history_via")], [tripStats.totalSaved.toFixed(2).replace(".",",") + " €", t("history_saved"), t("history_thanks")], [tripStats.totalCo2Kg.toFixed(1).replace(".",",") + " kg", t("history_co2"), t("history_vs")]].map(function(item) {

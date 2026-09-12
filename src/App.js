@@ -2321,11 +2321,13 @@ function MapView(props) {
   var [ready,    setReady]    = useState(false);
   var [noToken,  setNoToken]  = useState(false);
   var [filter,    setFilter]    = useState("rien");
-  var [subFilter, setSubFilter] = useState(null); // sous-filtre actif dans la catégorie sélectionnée
+  var [subFilter, setSubFilter] = useState(null);
+  var [showOpFilter, setShowOpFilter] = useState(false); // panneau filtre opérateurs
+  var [hiddenOps, setHiddenOps] = useState({}); // {lime: true} = caché
   var [selected, setSelected] = useState(null);
   var [selectedVehicle, setSelectedVehicle] = useState(null);
-  var [selectedStation, setSelectedStation] = useState(null); // station vélo sélectionnée
-  var [redrawTick, setRedrawTick] = useState(0); // incrémenté pour forcer un redraw même si scId ne change pas
+  var [selectedStation, setSelectedStation] = useState(null);
+  var [redrawTick, setRedrawTick] = useState(0);
   var [mapStations, setMapStations] = useState([]);
   var posRef = useRef(props.fromAddr || { lat: 48.8566, lng: 2.3522 });
   var filterRef         = useRef("rien"); // doit correspondre à useState("rien")
@@ -2350,6 +2352,7 @@ function MapView(props) {
     var mapboxgl = window.mapboxgl;
     markersRef.current.forEach(function(m) { m.remove(); });
     markersRef.current = [];
+    var currentHiddenOps = hiddenOps;
 
     // Détermine si un type de véhicule doit s'afficher selon le filtre actif
     function isVisible(type) {
@@ -2380,6 +2383,8 @@ function MapView(props) {
         var s = SCOOTERS[scId];
         if (!s) return;
         if (!isVisible(s.type)) return;
+        // Filtrer selon les opérateurs masqués
+        if (currentHiddenOps[s.name]) return;
         scPoints.push({ scId: scId, s: s, veh: veh });
       });
     });
@@ -2969,7 +2974,7 @@ function MapView(props) {
     function onZoom() { addMarkers(map, filterRef.current, subFilterRef.current); }
     map.on("zoomend", onZoom);
     return function() { map.off("zoomend", onZoom); };
-  }, [gbfs.vehicles, filter, props.searchRadius]);
+  }, [gbfs.vehicles, filter, props.searchRadius, hiddenOps, redrawTick]);
 
   // Recharger les stations quand le filtre change
   useEffect(function() {
@@ -3105,7 +3110,7 @@ function MapView(props) {
       </div>
 
       {/* Filtres — niveau 1 */}
-      <div style={{ padding: "8px 10px 0", display: "flex", gap: 6, background: T.card, borderTop: "1px solid " + T.border }}>
+      <div style={{ padding: "8px 10px 0", display: "flex", gap: 6, background: T.card, borderTop: "1px solid " + T.border, alignItems: "center" }}>
         {filters.map(function(f) {
           return (
             <button key={f[0]}
@@ -3117,7 +3122,46 @@ function MapView(props) {
             >{f[1]}</button>
           );
         })}
+        {filter === "micro" && (
+          <button onClick={function() { setShowOpFilter(!showOpFilter); }}
+            style={{ marginLeft: "auto", background: showOpFilter ? "#1a1a2e" : T.input, color: showOpFilter ? "#fff" : T.sub, border: "none", borderRadius: 20, padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", display: "flex", alignItems: "center", gap: 4 }}>
+            ⚙️ {Object.keys(hiddenOps).length > 0 ? Object.keys(hiddenOps).length + " masqué" + (Object.keys(hiddenOps).length > 1 ? "s" : "") : "Filtrer"}
+          </button>
+        )}
       </div>
+
+      {/* Panneau filtre opérateurs */}
+      {filter === "micro" && showOpFilter && (function() {
+        // Collecter les opérateurs uniques présents dans les véhicules chargés
+        var ops = {};
+        (gbfs.vehicles || []).forEach(function(v) {
+          var s = SCOOTERS[v.scId];
+          if (s && !ops[s.name]) ops[s.name] = { color: s.color, id: v.scId };
+        });
+        var opList = Object.entries(ops);
+        if (opList.length === 0) return null;
+        return (
+          <div style={{ background: T.card, padding: "8px 12px", borderTop: "1px solid " + T.border, display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {opList.map(function(entry) {
+              var name = entry[0], info = entry[1];
+              var hidden = hiddenOps[name];
+              return (
+                <button key={name} onClick={function() {
+                  setHiddenOps(function(prev) {
+                    var next = Object.assign({}, prev);
+                    if (next[name]) delete next[name]; else next[name] = true;
+                    return next;
+                  });
+                  setRedrawTick(function(t) { return t + 1; });
+                }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 20, border: "2px solid " + info.color, background: hidden ? T.input : info.color, color: hidden ? T.sub : "#fff", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", opacity: hidden ? 0.5 : 1 }}>
+                  {!hidden && <span>✓</span>}{name}
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Sous-filtres — niveau 2 */}
       {(filter === "vehicules" || filter === "micro") && (

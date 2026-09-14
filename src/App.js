@@ -1153,6 +1153,11 @@ function AuthGate(props) {
 
             <div style={{ height: 16 }} />
 
+            <button onClick={function() { supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.href } }); }}
+              style={{ width: "100%", padding: "15px 0", borderRadius: 14, border: "none", background: "#fff", color: "#1a1a2e", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <span style={{ fontSize: 18, fontWeight: 900 }}>G</span> Continuer avec Google
+            </button>
+
             <button onClick={function() { setMode("signup"); }}
               style={{ width: "100%", padding: "15px 0", borderRadius: 14, border: "none", background: "#0072b9", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>
               {t("auth_signup")}

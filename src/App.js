@@ -4,7 +4,14 @@ import { createClient } from "@supabase/supabase-js";
 // ── Supabase (authentification) ─────────────────────────────────────────────
 var SUPABASE_URL = "https://ylxwecvaudacpahonosy.supabase.co";
 var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlseHdlY3ZhdWRhY3BhaG9ub3N5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3NDM3NzUsImV4cCI6MjA5ODMxOTc3NX0.LXcLDyTrwureWtJJdxP7vlS0ptT8vdiotePT8OIg0as";
-var supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    detectSessionInUrl: true,
+    autoRefreshToken: true,
+    persistSession: true,
+    flowType: "implicit"
+  }
+});
 
 
 // ── Thèmes ─────────────────────────────────────────────────────────────────
@@ -1153,7 +1160,7 @@ function AuthGate(props) {
 
             <div style={{ height: 16 }} />
 
-            <button onClick={function() { supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: "https://ugomaker.github.io/Mobio" } }); }}
+            <button onClick={function() { supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: "https://ugomaker.github.io/Mobio", queryParams: { access_type: "offline", prompt: "consent" } } }); }}
               style={{ width: "100%", padding: "15px 0", borderRadius: 14, border: "none", background: "#fff", color: "#1a1a2e", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
               <span style={{ fontSize: 18, fontWeight: 900 }}>G</span> Continuer avec Google
             </button>

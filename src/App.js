@@ -1153,7 +1153,7 @@ function AuthGate(props) {
 
             <div style={{ height: 16 }} />
 
-            <button onClick={function() { supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.href } }); }}
+            <button onClick={function() { supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: "https://ugomaker.github.io/Mobio" } }); }}
               style={{ width: "100%", padding: "15px 0", borderRadius: 14, border: "none", background: "#fff", color: "#1a1a2e", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
               <span style={{ fontSize: 18, fontWeight: 900 }}>G</span> Continuer avec Google
             </button>

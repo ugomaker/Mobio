@@ -4200,7 +4200,14 @@ function App() {
 
   // Suivi de la session Supabase (connexion/déconnexion en temps réel)
   useEffect(function() {
-    supabase.auth.getSession().then(function(result) { setSession(result.data.session); });
+    // Gérer le callback OAuth (Google) — traite le code dans l'URL au retour
+    if (window.location.hash || window.location.search.includes("code=")) {
+      supabase.auth.getSession().then(function(result) {
+        setSession(result.data.session);
+      });
+    } else {
+      supabase.auth.getSession().then(function(result) { setSession(result.data.session); });
+    }
     var sub = supabase.auth.onAuthStateChange(function(event, newSession) { setSession(newSession); });
     return function() { sub.data.subscription.unsubscribe(); };
   }, []);

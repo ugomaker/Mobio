@@ -9,7 +9,6 @@ var supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     detectSessionInUrl: true,
     autoRefreshToken: true,
     persistSession: true,
-    flowType: "implicit"
   }
 });
 
@@ -4208,9 +4207,15 @@ function App() {
   // Suivi de la session Supabase (connexion/déconnexion en temps réel)
   useEffect(function() {
     // Gérer le callback OAuth (Google) — traite le code dans l'URL au retour
-    if (window.location.hash || window.location.search.includes("code=")) {
-      supabase.auth.getSession().then(function(result) {
-        setSession(result.data.session);
+    var params = new URLSearchParams(window.location.search);
+    var code = params.get("code");
+    if (code) {
+      supabase.auth.exchangeCodeForSession(window.location.href).then(function(result) {
+        if (result.data && result.data.session) {
+          setSession(result.data.session);
+        }
+        // Nettoyer l'URL
+        window.history.replaceState({}, document.title, window.location.pathname);
       });
     } else {
       supabase.auth.getSession().then(function(result) { setSession(result.data.session); });

@@ -1159,7 +1159,7 @@ function AuthGate(props) {
 
             <div style={{ height: 16 }} />
 
-            <button onClick={function() { supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: "https://ugomaker.github.io/Mobio", queryParams: { access_type: "offline", prompt: "consent" } } }); }}
+            <button onClick={function() { supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } }); }}
               style={{ width: "100%", padding: "15px 0", borderRadius: 14, border: "none", background: "#fff", color: "#1a1a2e", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
               <span style={{ fontSize: 18, fontWeight: 900 }}>G</span> Continuer avec Google
             </button>
@@ -4206,21 +4206,17 @@ function App() {
 
   // Suivi de la session Supabase (connexion/déconnexion en temps réel)
   useEffect(function() {
-    // Gérer le callback OAuth (Google) — traite le code dans l'URL au retour
-    var params = new URLSearchParams(window.location.search);
-    var code = params.get("code");
-    if (code) {
-      supabase.auth.exchangeCodeForSession(window.location.href).then(function(result) {
-        if (result.data && result.data.session) {
-          setSession(result.data.session);
-        }
-        // Nettoyer l'URL
+    // Supabase gère automatiquement le callback OAuth via detectSessionInUrl
+    supabase.auth.getSession().then(function(result) {
+      setSession(result.data.session);
+    });
+    var sub = supabase.auth.onAuthStateChange(function(event, newSession) {
+      setSession(newSession);
+      // Nettoyer l'URL après connexion OAuth
+      if (event === "SIGNED_IN" && window.location.search.includes("code=")) {
         window.history.replaceState({}, document.title, window.location.pathname);
-      });
-    } else {
-      supabase.auth.getSession().then(function(result) { setSession(result.data.session); });
-    }
-    var sub = supabase.auth.onAuthStateChange(function(event, newSession) { setSession(newSession); });
+      }
+    });
     return function() { sub.data.subscription.unsubscribe(); };
   }, []);
 

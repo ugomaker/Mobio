@@ -697,6 +697,7 @@ function BottomNav(props) {
     <div style={{
       display: "flex", borderTop: "1px solid " + T.nborder,
       background: T.nav, paddingBottom: 16, paddingTop: 10, flexShrink: 0,
+      position: "sticky", bottom: 0, zIndex: 100,
     }}>
       {tabs.map(function(t) {
         var id = t[0], ic = t[1], lb = t[2];
@@ -1969,7 +1970,7 @@ function Compare(props) {
 
 
   return (
-    <div style={{ flex: 1, overflowY: "hidden", display: "flex", flexDirection: "column", background: T.bg }}>
+    <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
       <div style={{ background: "#1a1a2e", padding: "18px 16px 14px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
@@ -3533,7 +3534,7 @@ function History(props) {
   var tripStats = getTripStats();
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
   return (
-    <div style={{ flex: 1, overflowY: "hidden", display: "flex", flexDirection: "column", background: T.bg }}>
+    <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
       <div style={{ background: "#1a1a2e", padding: "18px 16px 14px" }}>
         <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
         <div style={{ fontSize: 12, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif", color: "rgba(255,255,255,.6)" }}>{t("history_sub")}</div>
@@ -4174,6 +4175,17 @@ function NotifPanel(props) {
 // ── App ────────────────────────────────────────────────────────────────────
 function App() {
   var [tab, setTab]           = useState("compare");
+
+  // Bloquer le scroll vertical sur carte et comparateur
+  useEffect(function() {
+    var noScroll = tab === "map" || tab === "compare";
+    document.body.style.overflow = noScroll ? "hidden" : "";
+    document.documentElement.style.overflow = noScroll ? "hidden" : "";
+    return function() {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, [tab]);
   var [session, setSession]   = useState(undefined);
   var [fromAddr, setFromAddr] = useState({ label: "Recherche de ta position…", lat: 48.8566, lng: 2.3522 });
   var [geoLoading, setGeoLoading] = useState(false);

@@ -4176,25 +4176,16 @@ function NotifPanel(props) {
 function App() {
   var [tab, setTab]           = useState("compare");
 
-  // Bloquer le scroll vertical sur carte et comparateur
-  useEffect(function() {
-    var noScroll = tab === "map" || tab === "compare";
-    document.body.style.overflow = noScroll ? "hidden" : "";
-    document.documentElement.style.overflow = noScroll ? "hidden" : "";
-    return function() {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, [tab]);
   var [session, setSession]   = useState(undefined);
   var [fromAddr, setFromAddr] = useState({ label: "Recherche de ta position…", lat: 48.8566, lng: 2.3522 });
   var [geoLoading, setGeoLoading] = useState(false);
 
-  // Bloquer le scroll vertical sur carte et comparateur
+  // Bloquer le scroll + fond bleu plein écran
   useEffect(function() {
     var noScroll = tab === "map" || tab === "compare";
     document.body.style.overflow = noScroll ? "hidden" : "";
     document.documentElement.style.overflow = noScroll ? "hidden" : "";
+    document.body.style.background = "#1a1a2e";
     return function() {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
@@ -4470,3 +4461,4 @@ function App() {
 }
 
 export default App;
+            

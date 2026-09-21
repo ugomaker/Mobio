@@ -3537,8 +3537,9 @@ function History(props) {
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
       <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", margin: "0 calc(-50vw + 50%)" }}>
         <div style={{ maxWidth: 390, margin: "0 auto" }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
-        <div style={{ fontSize: 12, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif", color: "rgba(255,255,255,.6)" }}>{t("history_sub")}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{t("history_sub")}</div>
+        </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, padding: "12px 12px 0" }}>
         {[[String(tripStats.count), t("history_trips"), t("history_via")], [tripStats.totalSpent.toFixed(2).replace(".",",") + " €", t("history_spent"), t("history_via")], [tripStats.totalSaved.toFixed(2).replace(".",",") + " €", t("history_saved"), t("history_thanks")], [tripStats.totalCo2Kg.toFixed(1).replace(".",",") + " kg", t("history_co2"), t("history_vs")]].map(function(item) {

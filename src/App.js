@@ -3534,7 +3534,7 @@ function History(props) {
   var tripStats = getTripStats();
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
   return (
-    <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
+    <div style={{ flex: 1, background: T.bg }}>
       <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))" }}>
         <div style={{ maxWidth: 390, margin: "0 auto" }}>
         <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
@@ -3754,7 +3754,7 @@ function Profile(props) {
   }
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
+    <div style={{ flex: 1, background: T.bg }}>
 
       {/* Header sombre */}
       <div style={{ background: "#1a1a2e", padding: "18px 16px 16px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))" }}>

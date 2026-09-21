@@ -4421,6 +4421,7 @@ function App() {
       `}</style>
       {showOnboarding && <Onboarding onDone={function() { localStorage.setItem("mobio_onboarded", "1"); setOnboarded(true); }} />}
       {showAuth && <AuthGate T={T} supabase={supabase} lang={lang} setLang={function(l) { setLang(l); localStorage.setItem("mobio_lang", l); }} />}
+      <div style={{ flex: 1, overflowY: (tab === "history" || tab === "profile") ? "auto" : "hidden", display: "flex", flexDirection: "column" }}>
       {tab === "compare" && <Compare T={T} lang={lang} onVehicle={setVehicle} favs={favs} onFav={function(f, m) { setFavModal({ fav: f, mode: m }); }} onBell={function() { setShowNotifs(true); }} unreadCount={unreadCount} fromAddr={fromAddr} toAddr={toAddr} setFromAddr={setFromAddr} setToAddr={setToAddr} geoLoading={geoLoading} isPremium={isPremium} session={session} onUse={function() { return checkAndIncrementUsage(); }} />}
       {tab === "map" && fromAddr && fromAddr.lat && <MapView T={T} fromAddr={fromAddr} toAddr={toAddr} onVehicle={setVehicle} setFromAddr={setFromAddr} setToAddr={setToAddr} isPremium={isPremium} session={session} searchRadius={searchRadius} onUse={function() { return checkAndIncrementUsage(); }} />}
       {tab === "map" && (!fromAddr || !fromAddr.lat) && (
@@ -4438,6 +4439,7 @@ function App() {
           <Profile T={T} session={session} favs={favs} onFav={function(f, m) { setFavModal({ fav: f, mode: m }); }} onRemoveFav={removeFav} dark={dark} setDark={setDark} onTestNotif={triggerToast} setSearchRadius={setSearchRadius} lang={lang} setLang={function(l) { setLang(l); localStorage.setItem("mobio_lang", l); }} />
         )
       )}
+      </div>
       <BottomNav T={T} tab={tab} setTab={setTab} lang={lang} />
       {toast    && <Toast T={T} notif={toast} onClose={function() { setToast(null); }} />}
       {showNotifs && <NotifPanel T={T} dark={dark} notifs={notifs} onClose={function() { setShowNotifs(false); }} onMarkAll={markAllRead} onRead={markRead} />}

@@ -68,10 +68,7 @@ const HISTORY_DATA = [
   { id: 3, plId: "heetch", from: "Châtelet",     to: "Montmartre",   price: 12.80, dur: 22, date: "__yesterday__", saved: null, eco: false },
   { id: 4, plId: "uber",   from: "Opéra",        to: "Saint-Lazare", price: 7.60,  dur: 9,  date: "Lundi",       saved: null, eco: false },
 ];
-const MONTHLY = [
-  { mo: "Jan", val: 62 }, { mo: "Fév", val: 88 }, { mo: "Mar", val: 74 },
-  { mo: "Avr", val: 105 }, { mo: "Mai", val: 83 },
-];
+const MONTHLY = [];
 const PLACES = [
   { label: "Gare du Nord, Paris", lat: 48.8809, lng: 2.3553 },
   { label: "Gare de Lyon, Paris", lat: 48.8448, lng: 2.3735 },
@@ -156,6 +153,7 @@ var TRANSLATIONS = {
     map_route_car: "Trajet véhicule",
     map_route_walk:"Trajet piéton",
     map_vehicles:  "Véhicules à proximité",
+    map_title:     "Carte",
     filter_none:   "Rien",
     filter_veh:    "🚗 Véhicules",
     filter_micro:  "🛴 Micromobilité",
@@ -331,6 +329,7 @@ var TRANSLATIONS = {
     map_route_car: "Vehicle route",
     map_route_walk:"Walking route",
     map_vehicles:  "Nearby vehicles",
+    map_title:     "Map",
     filter_none:   "None",
     filter_veh:    "🚗 Vehicles",
     filter_micro:  "🛴 Micromobility",
@@ -1969,7 +1968,7 @@ function Compare(props) {
 
 
   return (
-    <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
+    <div style={{ flex: 1, overflowY: "hidden", background: T.bg }}>
       <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))" }}>
         <div style={{ maxWidth: 390, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
@@ -3043,6 +3042,7 @@ function MapView(props) {
 
       {/* Barre de recherche */}
       <div style={{ background: "#1a1a2e", padding: "10px 0", paddingTop: "calc(10px + env(safe-area-inset-top, 0px))" }}><div style={{ maxWidth: 390, margin: "0 auto", padding: "0 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5, marginBottom: 4 }}>{tMap("map_title")}</div>
         <AddrInput value={props.fromAddr ? props.fromAddr.label : ""} dot="#34d186" ph={t("map_depart")} onSelect={function(p) { props.setFromAddr && props.setFromAddr(p); }} T={T} userLat={props.fromAddr ? props.fromAddr.lat : null} userLng={props.fromAddr ? props.fromAddr.lng : null} />
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ flex: 1 }}>

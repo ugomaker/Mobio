@@ -1971,7 +1971,7 @@ function Compare(props) {
 
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", margin: "0 calc(-50vw + 50%)" }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px" }}>
         <div style={{ maxWidth: 390, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5, color: "#fff" }}>Mobio</div>
@@ -3043,7 +3043,7 @@ function MapView(props) {
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
       {/* Barre de recherche */}
-      <div style={{ background: "#1a1a2e", padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8, margin: "0 calc(-50vw + 50%)", paddingLeft: "calc(14px + max(0px, 50vw - 195px))", paddingRight: "calc(14px + max(0px, 50vw - 195px))" }}>
+      <div style={{ background: "#1a1a2e", padding: "10px 0" }}><div style={{ maxWidth: 390, margin: "0 auto", padding: "0 14px", display: "flex", flexDirection: "column", gap: 8 }}>
         <AddrInput value={props.fromAddr ? props.fromAddr.label : ""} dot="#34d186" ph={t("map_depart")} onSelect={function(p) { props.setFromAddr && props.setFromAddr(p); }} T={T} userLat={props.fromAddr ? props.fromAddr.lat : null} userLng={props.fromAddr ? props.fromAddr.lng : null} />
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ flex: 1 }}>
@@ -3535,9 +3535,9 @@ function History(props) {
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", margin: "0 calc(-50vw + 50%)" }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px" }}>
         <div style={{ maxWidth: 390, margin: "0 auto" }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{t("history_sub")}</div>
         </div>
       </div>
@@ -4406,9 +4406,11 @@ function App() {
   }
 
   return (
-    <div style={{ maxWidth: 390, margin: "0 auto", height: "100vh", display: "flex", flexDirection: "column", background: T.bg, position: "relative", overflow: "hidden", transition: "background .3s" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style>{"@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}"}</style>
+    <div style={{ width: "100%", maxWidth: "100vw", margin: "0 auto", height: "100vh", display: "flex", flexDirection: "column", background: T.bg, position: "relative", overflow: "hidden", transition: "background .3s" }}>
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+        .mobio-inner { max-width: 390px; margin: 0 auto; width: 100%; }
+      `}</style>
       {showOnboarding && <Onboarding onDone={function() { localStorage.setItem("mobio_onboarded", "1"); setOnboarded(true); }} />}
       {showAuth && <AuthGate T={T} supabase={supabase} lang={lang} setLang={function(l) { setLang(l); localStorage.setItem("mobio_lang", l); }} />}
       {tab === "compare" && <Compare T={T} lang={lang} onVehicle={setVehicle} favs={favs} onFav={function(f, m) { setFavModal({ fav: f, mode: m }); }} onBell={function() { setShowNotifs(true); }} unreadCount={unreadCount} fromAddr={fromAddr} toAddr={toAddr} setFromAddr={setFromAddr} setToAddr={setToAddr} geoLoading={geoLoading} isPremium={isPremium} session={session} onUse={function() { return checkAndIncrementUsage(); }} />}

@@ -4406,10 +4406,12 @@ function App() {
   }
 
   return (
-    <div style={{ width: "100%", maxWidth: "100vw", margin: "0 auto", height: "100vh", display: "flex", flexDirection: "column", background: T.bg, position: "relative", overflow: "hidden", transition: "background .3s" }}>
+    <div style={{ width: "100%", maxWidth: "100vw", margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", background: T.bg, position: "relative", overflow: "hidden", transition: "background .3s" }}>
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-        .mobio-inner { max-width: 390px; margin: 0 auto; width: 100%; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; height: 100%; background: #1a1a2e; }
+        #root { height: 100%; }
       `}</style>
       {showOnboarding && <Onboarding onDone={function() { localStorage.setItem("mobio_onboarded", "1"); setOnboarded(true); }} />}
       {showAuth && <AuthGate T={T} supabase={supabase} lang={lang} setLang={function(l) { setLang(l); localStorage.setItem("mobio_lang", l); }} />}

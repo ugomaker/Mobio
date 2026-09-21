@@ -697,7 +697,6 @@ function BottomNav(props) {
     <div style={{
       display: "flex", borderTop: "1px solid " + T.nborder,
       background: T.nav, paddingBottom: 16, paddingTop: 10, flexShrink: 0,
-      position: "sticky", bottom: 0, zIndex: 100,
     }}>
       {tabs.map(function(t) {
         var id = t[0], ic = t[1], lb = t[2];
@@ -3534,7 +3533,7 @@ function History(props) {
   var tripStats = getTripStats();
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
   return (
-    <div style={{ flex: 1, background: T.bg }}>
+    <div style={{ flex: 1, background: T.bg, paddingBottom: 80 }}>
       <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))" }}>
         <div style={{ maxWidth: 390, margin: "0 auto" }}>
         <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
@@ -3754,7 +3753,7 @@ function Profile(props) {
   }
 
   return (
-    <div style={{ flex: 1, background: T.bg }}>
+    <div style={{ flex: 1, background: T.bg, paddingBottom: 80 }}>
 
       {/* Header sombre */}
       <div style={{ background: "#1a1a2e", padding: "18px 16px 16px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))" }}>
@@ -4415,9 +4414,7 @@ function App() {
     <div style={{ width: "100%", maxWidth: "100vw", margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", background: T.bg, position: "relative", overflow: "hidden", transition: "background .3s" }}>
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-        * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; height: 100%; background: #1a1a2e; }
-        #root { height: 100%; }
+        html, body, #root { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #1a1a2e; }
       `}</style>
       {showOnboarding && <Onboarding onDone={function() { localStorage.setItem("mobio_onboarded", "1"); setOnboarded(true); }} />}
       {showAuth && <AuthGate T={T} supabase={supabase} lang={lang} setLang={function(l) { setLang(l); localStorage.setItem("mobio_lang", l); }} />}

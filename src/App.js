@@ -4182,6 +4182,12 @@ function App() {
   var [fromAddr, setFromAddr] = useState({ label: "Recherche de ta position…", lat: 48.8566, lng: 2.3522 });
   var [geoLoading, setGeoLoading] = useState(false);
 
+  // Fond bleu permanent sur body pour la barre de statut iPhone
+  useEffect(function() {
+    document.body.style.background = "#1a1a2e";
+    document.documentElement.style.background = "#1a1a2e";
+  });  // Pas de dépendances = s'exécute à chaque render
+
   // Bloquer le scroll + fond bleu plein écran
   useEffect(function() {
     var noScroll = tab === "map" || tab === "compare";

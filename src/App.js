@@ -1971,8 +1971,8 @@ function Compare(props) {
 
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", margin: "0 calc(-50vw + 50%)" }}>
+        <div style={{ maxWidth: 390, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5, color: "#fff" }}>Mobio</div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{t("compare_sub")}</div>
@@ -3043,7 +3043,7 @@ function MapView(props) {
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
       {/* Barre de recherche */}
-      <div style={{ background: "#1a1a2e", padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ background: "#1a1a2e", padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8, margin: "0 calc(-50vw + 50%)", paddingLeft: "calc(14px + max(0px, 50vw - 195px))", paddingRight: "calc(14px + max(0px, 50vw - 195px))" }}>
         <AddrInput value={props.fromAddr ? props.fromAddr.label : ""} dot="#34d186" ph={t("map_depart")} onSelect={function(p) { props.setFromAddr && props.setFromAddr(p); }} T={T} userLat={props.fromAddr ? props.fromAddr.lat : null} userLng={props.fromAddr ? props.fromAddr.lng : null} />
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ flex: 1 }}>
@@ -3535,7 +3535,8 @@ function History(props) {
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px" }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", margin: "0 calc(-50vw + 50%)" }}>
+        <div style={{ maxWidth: 390, margin: "0 auto" }}>
         <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
         <div style={{ fontSize: 12, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif", color: "rgba(255,255,255,.6)" }}>{t("history_sub")}</div>
       </div>
@@ -4185,7 +4186,6 @@ function App() {
     var noScroll = tab === "map" || tab === "compare";
     document.body.style.overflow = noScroll ? "hidden" : "";
     document.documentElement.style.overflow = noScroll ? "hidden" : "";
-    document.body.style.background = "#1a1a2e";
     return function() {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
@@ -4461,4 +4461,3 @@ function App() {
 }
 
 export default App;
-            

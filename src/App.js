@@ -1971,7 +1971,7 @@ function Compare(props) {
 
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px" }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))" }}>
         <div style={{ maxWidth: 390, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5, color: "#fff" }}>Mobio</div>
@@ -3043,7 +3043,7 @@ function MapView(props) {
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
       {/* Barre de recherche */}
-      <div style={{ background: "#1a1a2e", padding: "10px 0" }}><div style={{ maxWidth: 390, margin: "0 auto", padding: "0 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ background: "#1a1a2e", padding: "10px 0", paddingTop: "calc(10px + env(safe-area-inset-top, 0px))" }}><div style={{ maxWidth: 390, margin: "0 auto", padding: "0 14px", display: "flex", flexDirection: "column", gap: 8 }}>
         <AddrInput value={props.fromAddr ? props.fromAddr.label : ""} dot="#34d186" ph={t("map_depart")} onSelect={function(p) { props.setFromAddr && props.setFromAddr(p); }} T={T} userLat={props.fromAddr ? props.fromAddr.lat : null} userLng={props.fromAddr ? props.fromAddr.lng : null} />
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <div style={{ flex: 1 }}>
@@ -3535,7 +3535,7 @@ function History(props) {
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px" }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))" }}>
         <div style={{ maxWidth: 390, margin: "0 auto" }}>
         <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{t("history_sub")}</div>
@@ -3757,7 +3757,7 @@ function Profile(props) {
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
 
       {/* Header sombre */}
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 16px" }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 16px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {/* Avatar cliquable */}
           <div onClick={function() { avatarInputRef.current && avatarInputRef.current.click(); }}

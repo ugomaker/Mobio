@@ -3054,7 +3054,7 @@ function MapView(props) {
               style={{ background: "none", border: "none", fontSize: 18, color: T.muted, cursor: "pointer", padding: "0 4px", flexShrink: 0 }}>×</button>
           )}
         </div>
-      </div>
+      </div></div>
 
       {/* Carte */}
       <div style={{ position: "relative", flex: "0 0 310px" }}>

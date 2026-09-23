@@ -3533,13 +3533,14 @@ function History(props) {
   var tripStats = getTripStats();
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
   return (
-    <div style={{ flex: 1, background: T.bg, paddingBottom: 80 }}>
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))", position: "sticky", top: 0, zIndex: 10 }}>
+    <div style={{ flex: 1, background: T.bg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))", position: "sticky", top: 0, zIndex: 10, flexShrink: 0 }}>
         <div style={{ maxWidth: 390, margin: "0 auto" }}>
         <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5 }}>{t("history_title")}</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{t("history_sub")}</div>
         </div>
       </div>
+      <div style={{ flex: 1, overflowY: "auto", paddingBottom: 20 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, padding: "12px 12px 0" }}>
         {[[String(tripStats.count), t("history_trips"), t("history_via")], [tripStats.totalSpent.toFixed(2).replace(".",",") + " €", t("history_spent"), t("history_via")], [tripStats.totalSaved.toFixed(2).replace(".",",") + " €", t("history_saved"), t("history_thanks")], [tripStats.totalCo2Kg.toFixed(1).replace(".",",") + " kg", t("history_co2"), t("history_vs")]].map(function(item) {
           return (
@@ -3588,6 +3589,7 @@ function History(props) {
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
@@ -3753,10 +3755,10 @@ function Profile(props) {
   }
 
   return (
-    <div style={{ flex: 1, background: T.bg, paddingBottom: 80 }}>
+    <div style={{ flex: 1, background: T.bg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
       {/* Header sombre */}
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 16px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))", position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 16px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))", position: "sticky", top: 0, zIndex: 10, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {/* Avatar cliquable */}
           <div onClick={function() { avatarInputRef.current && avatarInputRef.current.click(); }}

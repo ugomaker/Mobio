@@ -1969,7 +1969,7 @@ function Compare(props) {
 
   return (
     <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))" }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: 390, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 700, fontFamily: "'DM Sans',sans-serif", letterSpacing: -0.5, color: "#fff" }}>Mobio</div>
@@ -3758,7 +3758,7 @@ function Profile(props) {
     <div style={{ flex: 1, background: T.bg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
       {/* Header sombre */}
-      <div style={{ background: "#1a1a2e", padding: "18px 16px 16px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))", position: "sticky", top: 0, zIndex: 10, flexShrink: 0 }}>
+      <div style={{ background: "#1a1a2e", padding: "18px 16px 16px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {/* Avatar cliquable */}
           <div onClick={function() { avatarInputRef.current && avatarInputRef.current.click(); }}
@@ -3799,6 +3799,7 @@ function Profile(props) {
         </div>
       </div>
 
+      <div style={{ flex: 1, overflowY: "auto", paddingBottom: 20 }}>
       <div style={{ padding: "12px 12px 0" }}>
 
         {/* Adresses favorites */}
@@ -4029,6 +4030,8 @@ function Profile(props) {
         </div>
       )}
 
+      </div>
+      </div>
     </div>
   );
 }

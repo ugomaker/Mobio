@@ -4416,11 +4416,11 @@ function App() {
     <div style={{ width: "100%", maxWidth: "100vw", margin: "0 auto", height: "100dvh", display: "flex", flexDirection: "column", background: T.bg, position: "relative", overflow: "hidden", transition: "background .3s" }}>
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-        html, body, #root { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #1a1a2e; }
+        html, body, #root { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #1a1a2e; } input, select, textarea { font-size: 16px !important; }
       `}</style>
       {showOnboarding && <Onboarding onDone={function() { localStorage.setItem("mobio_onboarded", "1"); setOnboarded(true); }} />}
       {showAuth && <AuthGate T={T} supabase={supabase} lang={lang} setLang={function(l) { setLang(l); localStorage.setItem("mobio_lang", l); }} />}
-      <div style={{ flex: 1, overflowY: (tab === "history" || tab === "profile") ? "auto" : "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
       {tab === "compare" && <Compare T={T} lang={lang} onVehicle={setVehicle} favs={favs} onFav={function(f, m) { setFavModal({ fav: f, mode: m }); }} onBell={function() { setShowNotifs(true); }} unreadCount={unreadCount} fromAddr={fromAddr} toAddr={toAddr} setFromAddr={setFromAddr} setToAddr={setToAddr} geoLoading={geoLoading} isPremium={isPremium} session={session} onUse={function() { return checkAndIncrementUsage(); }} />}
       {tab === "map" && fromAddr && fromAddr.lat && <MapView T={T} fromAddr={fromAddr} toAddr={toAddr} onVehicle={setVehicle} setFromAddr={setFromAddr} setToAddr={setToAddr} isPremium={isPremium} session={session} searchRadius={searchRadius} onUse={function() { return checkAndIncrementUsage(); }} />}
       {tab === "map" && (!fromAddr || !fromAddr.lat) && (

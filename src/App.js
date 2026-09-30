@@ -1968,7 +1968,7 @@ function Compare(props) {
 
 
   return (
-    <div style={{ flex: 1, overflowY: "hidden", background: T.bg }}>
+    <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
       <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))" }}>
         <div style={{ maxWidth: 390, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>

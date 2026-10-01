@@ -1328,6 +1328,7 @@ var GBFS_DOTT_OVERRIDE_URLS = {
 
 // Pony aussi a une URL unique par ville — confirmé officiellement à Bordeaux (contrat métropole nov. 2025-2029)
 var GBFS_PONY_URLS = {
+  marseille:"https://proxy.transport.data.gouv.fr/resource/pony-marseille-gbfs/gbfs.json",
   bordeaux: "https://proxy.transport.data.gouv.fr/resource/pony-bordeaux-gbfs/gbfs.json",
   nice:     "https://proxy.transport.data.gouv.fr/resource/pony-nice-gbfs/gbfs.json",
   grenoble: "https://proxy.transport.data.gouv.fr/resource/grenoble-velos-a-assistance-electrique-en-libre-service/gbfs.json",

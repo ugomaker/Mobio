@@ -1195,7 +1195,7 @@ function AuthGate(props) {
                     <select value={city} onChange={function(e) { setCity(e.target.value); }}
                       style={{ padding: "14px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,.15)", background: "rgba(30,30,50,.95)", color: city ? "#fff" : "rgba(255,255,255,.4)", fontSize: 15, fontFamily: "'DM Sans',sans-serif", outline: "none" }}>
                       <option value="" disabled>{t("auth_city") || "Ta ville principale"}</option>
-                      {["Paris","Lyon","Marseille","Bordeaux","Toulouse","Nice","Grenoble","Strasbourg","Nantes","Montpellier","Lille","Rennes","Nancy","Clermont-Ferrand","Madrid","Autre"].map(function(c) {
+                      {["Paris","Lyon","Marseille","Bordeaux","Toulouse","Nice","Grenoble","Strasbourg","Nantes","Montpellier","Lille","Rennes","Nancy","Clermont-Ferrand","Autre"].map(function(c) {
                         return <option key={c} value={c}>{c}</option>;
                       })}
                     </select>
@@ -1636,7 +1636,6 @@ function detectCityName(lat, lng) {
     { id: "rennes",     name: "Rennes",           lat: 48.1173, lng: -1.6778, radius: 0.15 },
     { id: "nancy",      name: "Nancy",            lat: 48.6921, lng: 6.1844,  radius: 0.15 },
     { id: "clermont",   name: "Clermont-Ferrand", lat: 45.7797, lng: 3.0863,  radius: 0.15 },
-    { id: "madrid",     name: "Madrid",           lat: 40.4168, lng: -3.7038, radius: 0.25 },
   ];
   for (var i = 0; i < cities.length; i++) {
     var c = cities[i];

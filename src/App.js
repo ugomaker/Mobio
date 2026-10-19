@@ -2366,6 +2366,13 @@ function Compare(props) {
                   onClick: function() { if (to) { logTrip({ mode: "moped", operator: m.name, price: m.price, km: km, saved: 0, co2: km * CO2_PAR_KM_VOITURE }); } openMopedApp(m.id); } });
               });
               combined.sort(function(a, b) { return toutSort === "time" ? a.mins - b.mins : a.price - b.price; });
+              var seenKeys = {};
+              combined = combined.filter(function(item) {
+                var key = item.catLabel + "_" + item.price.toFixed(2);
+                if (seenKeys[key]) return false;
+                seenKeys[key] = true;
+                return true;
+              });
               if (combined.length === 0) {
                 return (
                   <div style={{ textAlign: "center", padding: "32px 20px", color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>

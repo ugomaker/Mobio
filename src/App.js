@@ -1793,12 +1793,26 @@ function useFifteenStations(lat, lng) {
 
 
 // Vraie distance/durée routière + vrai niveau de trafic, via l'API Mapbox Directions
-// (driving-traffic = avec trafic en temps réel, driving = sans trafic = référence "normal")
-function useRealRoute(from, to) {
+// mode: "driving" (VTC, scooters moteur) ou "cycling" (vélos, trottinettes)
+// Pour driving: utilise driving-traffic (trafic réel) + driving (référence) → trafficRatio
+// Pour cycling: un seul appel cycling, trafficRatio toujours 1
+function useRealRoute(from, to, mode) {
+  var routeMode = mode || "driving";
   var [route, setRoute] = useState(null); // { km, mins, trafficRatio }
 
   useEffect(function() {
     if (!to) { setRoute(null); return; }
+    if (routeMode === "cycling") {
+      fetch("https://api.mapbox.com/directions/v5/mapbox/cycling/" +
+        from.lng + "," + from.lat + ";" + to.lng + "," + to.lat +
+        "?overview=false&access_token=" + MAPBOX_TOKEN).then(function(r) { return r.json(); })
+      .then(function(data) {
+        var r = data.routes && data.routes[0];
+        if (!r) { setRoute(null); return; }
+        setRoute({ km: r.distance / 1000, mins: Math.round(r.duration / 60), trafficRatio: 1 });
+      }).catch(function() { setRoute(null); });
+      return;
+    }
     Promise.all([
       fetch("https://api.mapbox.com/directions/v5/mapbox/driving-traffic/" +
         from.lng + "," + from.lat + ";" + to.lng + "," + to.lat +
@@ -1849,12 +1863,14 @@ function Compare(props) {
   var mecatran = useMecatranStations(from.lat, from.lng);
   var gbfsStations = useGbfsStations(from.lat, from.lng);
 
-  var realRoute = useRealRoute(from, to);
+  var realRoute = useRealRoute(from, to, "driving");
+  var cyclingRoute = useRealRoute(from, to, "cycling");
 
   // Tant que la vraie route n'est pas encore arrivée, on utilise une estimation à vol d'oiseau (provisoire)
   var km   = realRoute ? realRoute.km : (to ? Math.max(0.5, haversine(from.lat, from.lng, to.lat, to.lng) * 1.35) : 5.2);
   var mins = realRoute ? realRoute.mins : Math.round(km / 0.38);
-  var scMins = Math.round(km * 60 / 14);
+  // Durée vélo/trottinette : Mapbox cycling si dispo, sinon estimation à 14km/h
+  var scMins = cyclingRoute ? cyclingRoute.mins : Math.round(km * 60 / 14);
 
   var cityId = detectCity(from.lat, from.lng) || "";
   var mopedList = Object.keys(MOPEDS).filter(function(id) {
@@ -2191,8 +2207,8 @@ function Compare(props) {
                         <div style={{ fontSize: 11, color: T.muted, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{m.info}</div>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        {to && <div style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{m.price != null ? m.price.toFixed(2) : '—'} €</div>}
-                        <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{m.pMin != null ? m.pMin.toFixed(2).replace(".",",") : '—'}€/min</div>
+                        {to && <div style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{m.price.toFixed(2)} €</div>}
+                        <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{m.pMin.toFixed(2).replace(".",",")}€/min</div>
                         <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>sans abonnement</div>
                       </div>
                     </div>
@@ -3533,15 +3549,6 @@ function History(props) {
   var TRIPS_TRANSLATED = loadTrips().map(function(tr) { return Object.assign({}, tr, { date: tr.date === "__today__" ? t("hist_today") : tr.date === "__yesterday__" ? t("hist_yesterday") : tr.date, eco_label: t("hist_electric"), saved_label: t("hist_saved_badge") }); });
   var tripStats = getTripStats();
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
-  var [selectedStat, setSelectedStat] = React.useState(null);
-  // Explications affichées dans le panneau quand on clique sur une case
-  var STAT_EXPLAIN = {
-    trips: "Nombre de fois où tu as cliqué sur un lien opérateur depuis Mobio. Chaque clic = une intention de réservation.",
-    spent: "Somme des prix affichés au moment où tu as cliqué vers un opérateur. C'est une estimation basée sur le tarif visible à cet instant.",
-    saved: "Différence cumulée entre le prix le plus cher et le prix que tu as choisi, à chaque comparaison. Ce que tu aurais payé en plus sans Mobio.",
-    co2:   "Calculé sur tes trajets en trottinette ou vélo, en estimant qu'ils remplacent un trajet en voiture. Base : 150g CO2/km pour une voiture thermique moyenne."
-  };
-  var statKeys = ["trips", "spent", "saved", "co2"];
   return (
     <div style={{ flex: 1, background: T.bg, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ background: "#1a1a2e", padding: "18px 16px 14px", paddingTop: "calc(18px + env(safe-area-inset-top, 0px))", position: "sticky", top: 0, zIndex: 10, flexShrink: 0 }}>
@@ -3552,26 +3559,15 @@ function History(props) {
       </div>
       <div style={{ flex: 1, overflowY: "auto", paddingBottom: 20 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8, padding: "12px 12px 0" }}>
-        {[[String(tripStats.count), t("history_trips"), t("history_via"), "trips"], [tripStats.totalSpent.toFixed(2).replace(".",",") + " €", t("history_spent"), t("history_via"), "spent"], [tripStats.totalSaved.toFixed(2).replace(".",",") + " €", t("history_saved"), t("history_thanks"), "saved"], [tripStats.totalCo2Kg.toFixed(1).replace(".",",") + " kg", t("history_co2"), t("history_vs"), "co2"]].map(function(item) {
-          var key = item[3];
-          var isSelected = selectedStat === key;
+        {[[String(tripStats.count), t("history_trips"), t("history_via")], [tripStats.totalSpent.toFixed(2).replace(".",",") + " €", t("history_spent"), t("history_via")], [tripStats.totalSaved.toFixed(2).replace(".",",") + " €", t("history_saved"), t("history_thanks")], [tripStats.totalCo2Kg.toFixed(1).replace(".",",") + " kg", t("history_co2"), t("history_vs")]].map(function(item) {
           return (
-            <div key={item[1]} onClick={function() { setSelectedStat(isSelected ? null : key); }} style={{ background: isSelected ? T.accent + "18" : T.card, border: "1px solid " + (isSelected ? T.accent : T.border), borderRadius: 12, padding: "11px 12px", cursor: "pointer" }}>
+            <div key={item[1]} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "11px 12px" }}>
               <div style={{ fontSize: 20, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{item[0]}</div>
               <div style={{ fontSize: 11, color: T.sub, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{item[1]}</div>
               <div style={{ fontSize: 10, color: T.muted, marginTop: 3, fontFamily: "'DM Sans',sans-serif" }}>{item[2]}</div>
             </div>
           );
         })}
-      </div>
-      {/* Panneau d'explication — apparaît entre les cases et l'historique */}
-      <div style={{ margin: "8px 12px 0", background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: selectedStat ? "12px 14px" : "10px 14px", minHeight: 54, transition: "all .2s" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-          <span style={{ fontSize: 14, color: T.accent, flexShrink: 0, marginTop: 1 }}>ⓘ</span>
-          <div style={{ fontSize: 12, color: selectedStat ? T.text : T.muted, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.5 }}>
-            {selectedStat ? STAT_EXPLAIN[selectedStat] : "Appuie sur une case pour comprendre comment elle est calculée."}
-          </div>
-        </div>
       </div>
       <div style={{ padding: "12px 12px 4px" }}>
         <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "12px 12px 16px", display: "flex", alignItems: "flex-end", gap: 6, height: 80 }}>

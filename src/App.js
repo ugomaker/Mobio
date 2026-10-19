@@ -1852,6 +1852,7 @@ function Compare(props) {
   var [vtcSubFilter, setVtcSubFilter] = useState("vtc"); // "vtc" ou "moped"
   var [showPriceInfo, setShowPriceInfo] = useState(false);
   var [sort,  setSort]  = useState("price_asc");
+  var [toutSort, setToutSort] = useState("price");
   var [flash, setFlash] = useState(false);
   var [passengers, setPassengers] = useState(1);
   // Vélib' uniquement à Paris (lat ~48.8, lng ~2.3)
@@ -2080,7 +2081,7 @@ function Compare(props) {
         </div>}
 
         <div style={{ display: "flex", borderBottom: "1px solid " + T.border, marginLeft: -16, marginRight: -16, paddingLeft: 16 }}>
-          {[["vtc", t("compare_vtc")], ["micro", t("compare_micro")]].map(function(item) {
+          {[["vtc", t("compare_vtc")], ["micro", t("compare_micro")], ["tout", "Tout"]].map(function(item) {
             return (
               <button
                 key={item[0]}
@@ -2252,7 +2253,7 @@ function Compare(props) {
               );
             })}
           </div>
-        ) : (
+        ) : tab === "micro" ? (
           <div>
             <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
               {[["dist",t("compare_sort_dist")],["range",t("compare_sort_range")]].map(function(s) {
@@ -2330,6 +2331,70 @@ function Compare(props) {
                 </div>
               );
             })}
+          </div>
+        ) : (
+          <div>
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              {[["price", "💰 Prix"], ["time", "⏱ Temps"]].map(function(s) {
+                var active = toutSort === s[0];
+                return (
+                  <button key={s[0]} onClick={function() { setToutSort(s[0]); }}
+                    style={{ flex: 1, padding: "7px 0", borderRadius: 20, border: "none", fontWeight: 700, fontSize: 12,
+                      fontFamily: "'DM Sans',sans-serif", cursor: "pointer",
+                      background: active ? T.accent : T.input, color: active ? "#fff" : T.muted }}>
+                    {s[1]}
+                  </button>
+                );
+              })}
+            </div>
+            {!to ? (
+              <div style={{ textAlign: "center", padding: "32px 20px", color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>📍</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{t("compare_choose")}</div>
+              </div>
+            ) : (function() {
+              var combined = [];
+              vtcList.forEach(function(v) {
+                combined.push({ key: "vtc_"+v.id, catLabel: "VTC", name: v.name, short: v.short, color: v.color, tc: v.tc, price: v.price, mins: mins, onClick: function() { props.onVehicle(v); } });
+              });
+              scList.forEach(function(s) {
+                combined.push({ key: "sc_"+s.id, catLabel: s.type === "station" ? "Vélo" : (s.type === "bike" ? "Vélo" : "Trottinette"), name: s.name, short: s.short, color: s.color, tc: s.tc, price: s.price, mins: scMins, dist: s.dist,
+                  onClick: function() { if (s.operatorKey) { logTrip({ mode: "micro", operator: s.name, price: null, km: km, saved: 0, co2: km * CO2_PAR_KM_VOITURE }); openScApp(s.operatorKey, s.rentalUris); } } });
+              });
+              mopedList.forEach(function(m) {
+                combined.push({ key: "moped_"+m.id, catLabel: "Scooter élec.", name: m.name, short: m.short, color: m.color, tc: m.tc, price: m.price, mins: mins,
+                  onClick: function() { if (to) { logTrip({ mode: "moped", operator: m.name, price: m.price, km: km, saved: 0, co2: km * CO2_PAR_KM_VOITURE }); } openMopedApp(m.id); } });
+              });
+              combined.sort(function(a, b) { return toutSort === "time" ? a.mins - b.mins : a.price - b.price; });
+              if (combined.length === 0) {
+                return (
+                  <div style={{ textAlign: "center", padding: "32px 20px", color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>
+                    <div style={{ fontSize: 36, marginBottom: 12 }}>😕</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 6 }}>Aucune option disponible</div>
+                  </div>
+                );
+              }
+              return combined.map(function(item, i) {
+                return (
+                  <div key={item.key} onClick={item.onClick}
+                    style={{ background: T.card, border: i === 0 ? "1.5px solid " + T.accent : "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8, display: "flex", alignItems: "center", gap: 10, cursor: "pointer", position: "relative" }}>
+                    {i === 0 && <div style={{ position: "absolute", top: -9, right: 12, background: T.accent, color: "#fff", fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 5, fontFamily: "'DM Sans',sans-serif" }}>{toutSort === "time" ? "Le + rapide" : "Meilleur prix"}</div>}
+                    <Logo short={item.short} color={item.color} tc={item.tc} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{item.name}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 3, flexWrap: "wrap" }}>
+                        <span style={{ background: T.input, color: T.sub, padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans',sans-serif" }}>{item.catLabel}</span>
+                        {item.dist != null && <span style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>🚶 {item.dist < 1000 ? Math.round(item.dist)+"m" : (item.dist/1000).toFixed(1)+"km"}</span>}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{item.price.toFixed(2)} €</div>
+                      <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{item.mins} min</div>
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         )}
       </div>

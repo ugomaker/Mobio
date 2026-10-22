@@ -2935,8 +2935,8 @@ function MapView(props) {
       // Marqueur destination + itinéraire si destination déjà définie au montage
       // Utilise les refs pour éviter les closures stales (props figés au moment de map.on("load"))
       var toAddrNow   = toAddrRef.current;
-      var fromAddrNow = fromAddrRef.current || { lat: 43.2965, lng: 5.3698 };
-      if (toAddrNow) {
+      var fromAddrNow = fromAddrRef.current;
+      if (toAddrNow && fromAddrNow) {
         var destEl = document.createElement("div");
         destEl.style.cssText = "width:14px;height:14px;border-radius:50%;background:#1a1a2e;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3)";
         var destMarker = new mapboxgl.Marker({ element: destEl }).setLngLat([toAddrNow.lng, toAddrNow.lat]).addTo(map);

@@ -1875,7 +1875,7 @@ function Compare(props) {
 
   var cityId = detectCity(from.lat, from.lng) || "";
   var mopedList = Object.keys(MOPEDS).filter(function(id) {
-    return MOPEDS[id].cities.indexOf(cityId) >= 0;
+    return id !== "cityscoot" && MOPEDS[id].cities.indexOf(cityId) >= 0;
   }).map(function(id) {
     var m = MOPEDS[id];
     return { id: id, name: m.name, short: m.short, color: m.color, tc: m.tc,
@@ -1938,26 +1938,41 @@ function Compare(props) {
     if (countPerOperator[op] <= 2) scList.push(entry);
   }
   scList = scList.concat(
-    velib.stations.slice(0, 2).map(function(st) {
+    velib.stations.slice(0, 2).flatMap(function(st) {
       var walkMins = Math.round(st.dist / 80); // ~80m/min à pied
       var rideMins = scMins;
-      var price = st.elecDispo > 0 ? Math.round((1 + rideMins * 0.17) * 100) / 100 : Math.round((rideMins > 45 ? 1 + (rideMins - 45) * 0.10 : 0) * 100) / 100;
-      return {
-        id: "velib_" + st.id,
-        name: "Vélib'",  stationLabel: st.elecDispo > 0 ? t("hist_electric") : "Mécanique",
-        short: "Vb", color: "#0072b9", tc: "#fff",
-        type: "station",
-        subtype: st.elecDispo > 0 ? t("hist_electric") : "Mécanique",
-        bat: null, unlock: 0, pMin: st.elecDispo > 0 ? 0.17 : 0,
-        price: price,
-        dist: st.dist,
-        real: true,
-        mechaDispo: st.mechaDispo,
-        elecDispo: st.elecDispo,
-        totalDispo: st.totalDispo,
-        stationName: st.name,
-        walkMins: walkMins,
-      };
+      var entries = [];
+      if (st.mechaDispo > 0) {
+        var mechaPrice = Math.round((rideMins > 45 ? 1 + (rideMins - 45) * 0.10 : 0) * 100) / 100;
+        entries.push({
+          id: "velib_mecha_" + st.id,
+          name: "Vélib'", stationLabel: "Mécanique",
+          short: "Vb", color: "#0072b9", tc: "#fff",
+          type: "station", subtype: "Mécanique",
+          bat: null, unlock: 0, pMin: 0.10, freeMins: 45,
+          price: mechaPrice,
+          dist: st.dist, real: true,
+          mechaDispo: st.mechaDispo, elecDispo: 0,
+          totalDispo: st.mechaDispo,
+          stationName: st.name, walkMins: walkMins,
+        });
+      }
+      if (st.elecDispo > 0) {
+        var elecPrice = Math.round((1 + rideMins * 0.17) * 100) / 100;
+        entries.push({
+          id: "velib_elec_" + st.id,
+          name: "Vélib'", stationLabel: t("hist_electric"),
+          short: "Vb", color: "#0072b9", tc: "#fff",
+          type: "station", subtype: t("hist_electric"),
+          bat: null, unlock: 1, pMin: 0.17, freeMins: 0,
+          price: elecPrice,
+          dist: st.dist, real: true,
+          mechaDispo: 0, elecDispo: st.elecDispo,
+          totalDispo: st.elecDispo,
+          stationName: st.name, walkMins: walkMins,
+        });
+      }
+      return entries;
     })
   ).concat(
     jcdecaux.stations.concat(fifteen.stations).concat(mecatran.stations).concat(gbfsStations.stations).slice(0, 2).map(function(st) {
@@ -2326,7 +2341,7 @@ function Compare(props) {
                     {props.toAddr ? (
                       <div style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{s.price.toFixed(2)} €</div>
                     ) : null}
-                    <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.real && s.type === "station" ? (s.freeMins ? "Gratuit " + s.freeMins + "min · ~" + s.pMin + "€/min ensuite" : "Gratuit 45min · ~0,17€/min ensuite") : (s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min")}</div>
+                    <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.real && s.type === "station" ? (s.freeMins > 0 ? "Gratuit " + s.freeMins + "min · ~" + s.pMin + "€/min ensuite" : s.unlock > 0 ? s.unlock + "€ · " + s.pMin + "€/min" : "Gratuit 45min · ~0,17€/min ensuite") : (s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min")}</div>
                   </div>
                 </div>
               );

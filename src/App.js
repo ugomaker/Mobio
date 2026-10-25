@@ -2085,7 +2085,7 @@ function Compare(props) {
         </div>
 
         {props.toAddr && <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-          {[[km.toFixed(1) + " km", "Distance"], [formatDuration(mins), "Durée"], [trafLabel, "Trafic"]].map(function(item, i) {
+          {[[km.toFixed(1) + " km", "Distance"], [formatDuration(tab === "micro" ? scMins : mins), "Durée"], [trafLabel, "Trafic"]].map(function(item, i) {
             return (
               <div key={item[1]} style={{ flex: 1, background: T.input, borderRadius: 8, padding: "7px 8px", textAlign: "center" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: i === 2 ? trafColor : T.text, fontFamily: "'DM Sans',sans-serif" }}>{item[0]}</div>

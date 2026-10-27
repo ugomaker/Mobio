@@ -37,7 +37,7 @@ const PLATFORMS = {
 // Scooters partagés (permis requis, à deux places, ~50cm3 électrique)
 const MOPEDS = {
   yego:      { name: "Yego",      short: "Yg", color: "#FF6B00", tc: "#fff", base: 0, pKm: 0, pMin: 0.39, stars: 4.3,
-    cities: ["paris", "bordeaux", "toulouse", "nice"],
+    cities: ["bordeaux", "toulouse", "nice"],
     label: "Scooter électrique", seats: 2, speed: 50,
     info: "2 casques inclus · Permis AM/B requis",
     appUrl: "https://apps.apple.com/fr/app/yego-mobility/id1181020675" },

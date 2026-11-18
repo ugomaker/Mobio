@@ -27,12 +27,15 @@ const DARK = {
   nav: "#1c1c27", nborder: "#2e2e42", accent: "#6366f1",
 };
 
+// ── Constantes ─────────────────────────────────────────────────────────────
+const MAX_URBAN_KM = 100; // Au-delà, on refuse le calcul (pas une appli de longue distance)
+
 // ── Données ────────────────────────────────────────────────────────────────
 const PLATFORMS = {
   uber:   { name: "Uber",   short: "Ub", color: "#000",    tc: "#fff", base: 1.5, pKm: 1.20, pMin: 0.22, stars: 4.6, appUrl: "https://apps.apple.com/fr/app/uber-demandez-une-course/id368677368", categories: [{label:"UberX", seats:4},{label:"Uber Comfort", seats:4},{label:"Uber XL", seats:6},{label:"Uber Van", seats:7}] },
   bolt:   { name: "Bolt",   short: "Bt", color: "#34d186", tc: "#fff", base: 1.1, pKm: 0.95, pMin: 0.18, stars: 4.8, appUrl: "https://apps.apple.com/fr/app/bolt-commandez-une-course/id675033630", categories: [{label:"Bolt Standard", seats:4},{label:"Bolt XL", seats:6}] },
   heetch: { name: "Heetch", short: "He", color: "#ff1c5b", tc: "#fff", base: 1.3, pKm: 1.05, pMin: 0.20, stars: 4.7, appUrl: "https://apps.apple.com/fr/app/heetch-vtc/id899361275", categories: [{label:"Heetch", seats:4},{label:"Heetch XL", seats:6}] },
-  marcel: { name: "Marcel", short: "Ma", color: "#6b6b76", tc: "#fff", base: 2.0, pKm: 1.45, pMin: 0.28, stars: 4.9, appUrl: "https://apps.apple.com/fr/app/marcel-vtc/id1043720189", categories: [{label:"Marcel Berline", seats:4},{label:"Marcel Van", seats:7}] },
+  marcel: { name: "Marcel", short: "Ma", color: "#6b6b76", tc: "#fff", base: 2.0, pKm: 1.45, pMin: 0.28, stars: 4.9, appUrl: "https://apps.apple.com/fr/app/marcel-vtc/id1043720189", cities: ["paris"], categories: [{label:"Marcel Berline", seats:4},{label:"Marcel Van", seats:7}] },
 };
 // Scooters partagés (permis requis, à deux places, ~50cm3 électrique)
 const MOPEDS = {
@@ -722,7 +725,9 @@ function BottomNav(props) {
 
 function AddrInput(props) {
   var T = props.T;
-  var [query, setQuery] = useState(props.value || "");
+  // "Position non disponible…" est un label interne — on ne le montre pas dans le champ de saisie
+  function cleanValue(v) { return (v && v.startsWith("Position non disponible")) ? "" : (v || ""); }
+  var [query, setQuery] = useState(cleanValue(props.value));
   var [suggestions, setSuggestions] = useState([]);
   var [open, setOpen] = useState(false);
   var [loading, setLoading] = useState(false);
@@ -733,7 +738,7 @@ function AddrInput(props) {
   // Mettre à jour le champ quand la position GPS change automatiquement
   // (ex: géolocalisation initiale, déplacement détecté)
   useEffect(function() {
-    if (props.value && !open) setQuery(props.value);
+    if (!open) setQuery(cleanValue(props.value));
   }, [props.value]);
 
   useEffect(function() {
@@ -1260,7 +1265,7 @@ function useVelib(lat, lng) {
   var [error,    setError]    = useState(null);
 
   useEffect(function() {
-    if (!lat || !lng) return;
+    if (!lat || !lng) { setStations([]); return; }
     setLoading(true);
 
     // API OpenData Paris - données temps réel Vélib'
@@ -1309,10 +1314,14 @@ function useVelib(lat, lng) {
 var GBFS_PROXY = "https://mobio-proxy.vercel.app/api/gbfs?url=";
 
 // Opérateurs avec un schéma d'URL prévisible par ville (vérifié via le catalogue officiel MobilityData systems.csv)
+// Le champ "cities" limite les appels aux villes où l'opérateur est connu — évite des 404 inutiles
 var GBFS_OPERATORS_TEMPLATED = [
-  { id: "lime", urlTpl: "https://data.lime.bike/api/partners/v2/gbfs/{city}/gbfs.json" },
-  { id: "dott", urlTpl: "https://gbfs.api.ridedott.com/public/v2/{city}/gbfs.json" },
-  { id: "bird", urlTpl: "https://mds.bird.co/gbfs/v2/public/{city}/gbfs.json" },
+  { id: "lime", urlTpl: "https://data.lime.bike/api/partners/v2/gbfs/{city}/gbfs.json",
+    cities: ["paris","lyon","bordeaux","marseille","montpellier","toulouse","nantes","strasbourg","rennes","grenoble","nice","lille"] },
+  { id: "dott", urlTpl: "https://gbfs.api.ridedott.com/public/v2/{city}/gbfs.json",
+    cities: ["paris","lyon","bordeaux","marseille","nantes","strasbourg","rennes","grenoble","lille","montpellier"] },
+  { id: "bird", urlTpl: "https://mds.bird.co/gbfs/v2/public/{city}/gbfs.json",
+    cities: ["paris"] }, // Bird a fortement réduit sa présence en France
 ];
 
 // Voi utilise un identifiant unique par déploiement (pas de schéma par ville) — on doit le confirmer ville par ville
@@ -1437,13 +1446,15 @@ function useGBFS(lat, lng, radius) {
     }
 
     setLoading(true);
-    var sources = GBFS_OPERATORS_TEMPLATED.map(function(op) {
-      // Utiliser l'URL spécifique si disponible (ex: Dott Grenoble via portail métro)
-      if (op.id === "dott" && GBFS_DOTT_OVERRIDE_URLS[cityId]) {
-        return { id: "dott", url: GBFS_DOTT_OVERRIDE_URLS[cityId] };
-      }
-      return { id: op.id, url: op.urlTpl.replace("{city}", cityId) };
-    });
+    var sources = GBFS_OPERATORS_TEMPLATED
+      .filter(function(op) { return !op.cities || op.cities.indexOf(cityId) >= 0; })
+      .map(function(op) {
+        // Utiliser l'URL spécifique si disponible (ex: Dott Grenoble via portail métro)
+        if (op.id === "dott" && GBFS_DOTT_OVERRIDE_URLS[cityId]) {
+          return { id: "dott", url: GBFS_DOTT_OVERRIDE_URLS[cityId] };
+        }
+        return { id: op.id, url: op.urlTpl.replace("{city}", cityId) };
+      });
     if (GBFS_VOI_URLS[cityId]) sources.push({ id: "voi", url: GBFS_VOI_URLS[cityId] });
     if (GBFS_PONY_URLS[cityId]) sources.push({ id: "pony", url: GBFS_PONY_URLS[cityId] });
     if (GBFS_YEGO_URLS[cityId]) sources.push({ id: "yego_moped", url: GBFS_YEGO_URLS[cityId] });
@@ -1891,6 +1902,8 @@ function Compare(props) {
 
   var vtcList = Object.keys(PLATFORMS).filter(function(id) {
     var p = PLATFORMS[id];
+    // Filtre par ville si la plateforme a une restriction géographique
+    if (p.cities && p.cities.indexOf(cityId) < 0) return false;
     // On garde la compagnie si au moins une de ses catégories peut accueillir le nombre de passagers
     return p.categories.some(function(c) { return c.seats >= passengers; });
   }).map(function(id) {
@@ -2094,6 +2107,12 @@ function Compare(props) {
             );
           })}
         </div>}
+
+        {props.toAddr && km > MAX_URBAN_KM && (
+          <div style={{ background: "#fff3cd", border: "1px solid #ffc107", borderRadius: 10, padding: "10px 14px", marginBottom: 12, fontSize: 13, color: "#856404", fontFamily: "'DM Sans',sans-serif" }}>
+            ⚠️ Trajet de {km.toFixed(0)} km — Mobio est conçu pour la mobilité urbaine (moins de {MAX_URBAN_KM} km). Les estimations affichées ne sont pas représentatives.
+          </div>
+        )}
 
         <div style={{ display: "flex", borderBottom: "1px solid " + T.border, marginLeft: -16, marginRight: -16, paddingLeft: 16 }}>
           {[["vtc", t("compare_vtc")], ["micro", t("compare_micro")], ["tout", "Tout"]].map(function(item) {

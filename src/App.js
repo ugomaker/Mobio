@@ -40,7 +40,7 @@ const PLATFORMS = {
 // Scooters partagés (permis requis, à deux places, ~50cm3 électrique)
 const MOPEDS = {
   yego:      { name: "Yego",      short: "Yg", color: "#FF6B00", tc: "#fff", base: 0, pKm: 0, pMin: 0.39, stars: 4.3,
-    cities: ["bordeaux", "toulouse", "nice"],
+    cities: ["paris", "bordeaux", "toulouse", "nice"],
     label: "Scooter électrique", seats: 2, speed: 50,
     info: "2 casques inclus · Permis AM/B requis",
     appUrl: "https://apps.apple.com/fr/app/yego-mobility/id1181020675" },
@@ -2871,6 +2871,7 @@ function MapView(props) {
           var status = results[1].data.stations;
           var statusById = {};
           status.forEach(function(s) { statusById[s.station_id] = s; });
+          var nearbyGbfsSt = [];
           info.filter(function(s) { return distMeters(lat, lng, s.lat, s.lon) < 5000 })
             .sort(function(a, b) { return distMeters(lat, lng, a.lat, a.lon) - distMeters(lat, lng, b.lat, b.lon); })
             .forEach(function(s) {
@@ -2878,6 +2879,8 @@ function MapView(props) {
               var avail = st.num_bikes_available || 0;
               if (avail === 0) return;
               var dM = distMeters(lat, lng, s.lat, s.lon);
+              // Alimenter le panneau "Véhicules proches" avec les stations de la ville
+              nearbyGbfsSt.push({ id: s.station_id, name: s.name, total: avail, elec: 0, lat: s.lat, lng: s.lon, dist: dM, city: cityG });
               var el = document.createElement("div");
               el.style.cssText = "display:inline-block;";
               var inner = document.createElement("div");
@@ -2891,6 +2894,7 @@ function MapView(props) {
                 .setLngLat([s.lon, s.lat]).addTo(map);
               stationMarkersRef.current.push(gbfsStMarker);
             });
+          if (nearbyGbfsSt.length > 0) setMapStations(nearbyGbfsSt);
         }).catch(function() {});
     }
   }
@@ -3369,14 +3373,16 @@ function MapView(props) {
         )}
         <div style={{ display: "flex", gap: 8, padding: "0 12px 14px", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollSnapType: "x proximity" }}>
           {(filter === "tous" || (filter === "micro" && (!subFilter || subFilter === "station"))) && mapStations.slice(0, 3).map(function(st) {
+            var cityInfo = st.city || { service: "Vélib'", color: "#0072b9", short: "Vb", freeMins: 45 };
+            var shortLabel = cityInfo.short || (cityInfo.service ? cityInfo.service.slice(0, 2) : "Vb");
             return (
               <div key={"vb_" + st.id} style={{ flexShrink: 0, width: 110, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "10px 11px" }}>
-                <Logo short="Vb" color="#0072b9" tc="#fff" size={28} />
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginTop: 6, fontFamily: "'DM Sans',sans-serif" }}>Vélib'</div>
+                <Logo short={shortLabel} color={cityInfo.color || "#0072b9"} tc="#fff" size={28} />
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginTop: 6, fontFamily: "'DM Sans',sans-serif" }}>{cityInfo.service || "Vélib'"}</div>
                 <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif", marginBottom: 2 }}>{st.name.length > 18 ? st.name.slice(0,18)+"…" : st.name}</div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#0072b9", fontFamily: "'DM Sans',sans-serif" }}>🚲 {st.total} vélos</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: cityInfo.color || "#0072b9", fontFamily: "'DM Sans',sans-serif" }}>🚲 {st.total} vélos</div>
                 <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>🚶 {st.dist} m</div>
-                <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Gratuit 45min</div>
+                <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Gratuit {cityInfo.freeMins}min</div>
               </div>
             );
           })}
@@ -3443,6 +3449,13 @@ function MapView(props) {
             if (!subFilter && filter === "micro" && realScooters.length === 0 && stationItems.length === 0 &&
                 NO_SCOOTERS.indexOf(detectedCity) >= 0 && NO_FREE_BIKES.indexOf(detectedCity) >= 0) {
               return [<div key="empty-all" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>Aucun opérateur de micro-mobilité n'est référencé dans cette ville par Mobio.</div>];
+            }
+            // Avec sous-filtre : si liste vide, indiquer le chargement ou l'absence de résultat dans le périmètre
+            if (subFilter && realScooters.length === 0 && stationItems.length === 0) {
+              if (gbfs.loading) {
+                return [<div key="loading-sf" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>Chargement des véhicules…</div>];
+              }
+              return [<div key="empty-sf" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>Aucun véhicule de ce type détecté dans ce périmètre.</div>];
             }
 
             return realScooters.map(function(item) {

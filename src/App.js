@@ -787,7 +787,7 @@ function AddrInput(props) {
         encodeURIComponent(val) +
         "&access_token=" + MAPBOX_TOKEN +
         "&session_token=" + sessionTokenRef.current +
-        "&language=fr&limit=10" + proximityParam + categoryParam
+        "&language=fr&limit=10&types=address,place,poi" + proximityParam + categoryParam
       )
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -1317,11 +1317,11 @@ var GBFS_PROXY = "https://mobio-proxy.vercel.app/api/gbfs?url=";
 // Le champ "cities" limite les appels aux villes où l'opérateur est connu — évite des 404 inutiles
 var GBFS_OPERATORS_TEMPLATED = [
   { id: "lime", urlTpl: "https://data.lime.bike/api/partners/v2/gbfs/{city}/gbfs.json",
-    cities: ["paris","lyon","bordeaux","marseille","montpellier","toulouse","nantes","strasbourg","rennes","grenoble","nice","lille"] },
+    cities: ["paris","bordeaux","marseille","montpellier","toulouse","nantes","strasbourg","rennes","grenoble","nice","lille"] },
   { id: "dott", urlTpl: "https://gbfs.api.ridedott.com/public/v2/{city}/gbfs.json",
     cities: ["paris","lyon","bordeaux","marseille","nantes","strasbourg","rennes","grenoble","lille","montpellier"] },
   { id: "bird", urlTpl: "https://mds.bird.co/gbfs/v2/public/{city}/gbfs.json",
-    cities: ["paris"] }, // Bird a fortement réduit sa présence en France
+    cities: [] }, // Bird a quitté la France — URL 404 confirmée
 ];
 
 // Voi utilise un identifiant unique par déploiement (pas de schéma par ville) — on doit le confirmer ville par ville
@@ -1515,7 +1515,7 @@ var MECATRAN_CITIES = {
 
 // Systèmes de vélos en station avec flux GBFS propre (pas JCDecaux classique, pas Fifteen, pas Mecatran)
 var GBFS_STATION_CITIES = {
-  lyon:       { name: "Lyon",       color: "#e2001a", service: "Vélo'v",  pMin: 0.10, freeMins: 30,
+  lyon:       { cityId: "lyon", name: "Lyon",       color: "#e2001a", service: "Vélo'v",  pMin: 0.10, freeMins: 30,
     url: "https://download.data.grandlyon.com/files/rdata/jcd_jcdecaux.jcdvelov/gbfs.json" },
   strasbourg: { name: "Strasbourg", color: "#e2001a", service: "Vélhop",  pMin: 0.10, freeMins: 30,
     url: "https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_ae/gbfs.json" },
@@ -1526,6 +1526,48 @@ var GBFS_STATION_CITIES = {
   rennes:     { name: "Rennes",     color: "#003189", service: "STAR",    pMin: 0.10, freeMins: 30,
     url: "https://eu.ftp.opendatasoft.com/star/gbfs/gbfs.json" },
 };
+
+// ── Tarification sans abonnement des vélos en station ──────────────────────
+var STATION_PRICING = {
+  paris: {
+    mec:  { pPer: 1.00, per: 30, freeMins: 0,    plafond: 18 },
+    elec: { unlock: 3.00, freeMins: 45, pPer: 2.00, per: 30, plafond: 38 }
+  },
+  lyon: {
+    mec:  { unlock: 1.80, freeMins: 9999, pPer: 0, per: 30, plafond: null },
+    elec: { pPer: 1.00, per: 30, freeMins: 0, plafond: null }
+  }
+};
+
+// Calcule le prix d'un trajet à vélo en station selon la tarification locale (sans abonnement)
+function calcStationPrice(cityId, type, mins) {
+  var p = STATION_PRICING[cityId] ? STATION_PRICING[cityId][type] : null;
+  if (!p) return null;
+  var effective = Math.max(0, mins - (p.freeMins || 0));
+  var periods = p.per ? Math.ceil(effective / p.per) : 0;
+  var price = (p.unlock || 0) + periods * (p.pPer || 0);
+  if (p.plafond != null) price = Math.min(price, p.plafond);
+  return Math.round(price * 100) / 100;
+}
+
+// Génère le libellé tarifaire affiché (tarif sans abonnement)
+function stationPriceLabel(cityId, type) {
+  var p = STATION_PRICING[cityId] ? STATION_PRICING[cityId][type] : null;
+  if (!p) return null;
+  if (p.freeMins >= 9999 && !p.pPer) {
+    return (p.unlock || 0).toFixed(2).replace(".", ",") + "€ le trajet · tarif sans abo";
+  }
+  var parts = [];
+  if (p.unlock > 0 && p.freeMins > 0 && p.pPer > 0) {
+    parts.push(p.unlock.toFixed(2).replace(".", ",").replace(",00", "") + "€ + " + p.pPer.toFixed(2).replace(".", ",").replace(",00", "") + "€/" + p.per + "min après " + p.freeMins + "min");
+  } else {
+    if (p.unlock > 0) parts.push(p.unlock.toFixed(2).replace(".", ",") + "€");
+    if (p.freeMins > 0) parts.push(p.freeMins + "min offertes");
+    if (p.pPer > 0) parts.push(p.pPer.toFixed(2).replace(".", ",") + "€/" + p.per + "min");
+  }
+  parts.push("tarif sans abo");
+  return parts.join(" · ");
+}
 
 function useMecatranStations(lat, lng) {
   var [stations, setStations] = useState([]);
@@ -1885,12 +1927,12 @@ function Compare(props) {
   var scMins = cyclingRoute ? cyclingRoute.mins : Math.round(km * 60 / 14);
 
   var cityId = detectCity(from.lat, from.lng) || "";
-  var mopedList = Object.keys(MOPEDS).filter(function(id) {
+  var mopedList = km > MAX_URBAN_KM ? [] : Object.keys(MOPEDS).filter(function(id) {
     return id !== "cityscoot" && MOPEDS[id].cities.indexOf(cityId) >= 0;
   }).map(function(id) {
     var m = MOPEDS[id];
     return { id: id, name: m.name, short: m.short, color: m.color, tc: m.tc,
-      stars: m.stars, price: calcMopedPrice(id, km, mins), label: m.label, info: m.info };
+      stars: m.stars, price: calcMopedPrice(id, km, mins), pMin: m.pMin, label: m.label, info: m.info };
   });
 
   // Vrai niveau de trafic : ratio durée-avec-trafic / durée-sans-trafic (Mapbox), pas une estimation par seuils arbitraires
@@ -1956,13 +1998,13 @@ function Compare(props) {
       var rideMins = scMins;
       var entries = [];
       if (st.mechaDispo > 0) {
-        var mechaPrice = Math.round((rideMins > 45 ? 1 + (rideMins - 45) * 0.10 : 0) * 100) / 100;
+        var mechaPrice = calcStationPrice("paris", "mec", rideMins);
         entries.push({
           id: "velib_mecha_" + st.id,
           name: "Vélib'", stationLabel: "Mécanique",
           short: "Vb", color: "#0072b9", tc: "#fff",
           type: "station", subtype: "Mécanique",
-          bat: null, unlock: 0, pMin: 0.10, freeMins: 45,
+          bat: null, unlock: 0, pMin: null, freeMins: 0, priceLabel: stationPriceLabel("paris", "mec"),
           price: mechaPrice,
           dist: st.dist, real: true,
           mechaDispo: st.mechaDispo, elecDispo: 0,
@@ -1971,13 +2013,13 @@ function Compare(props) {
         });
       }
       if (st.elecDispo > 0) {
-        var elecPrice = Math.round((1 + rideMins * 0.17) * 100) / 100;
+        var elecPrice = calcStationPrice("paris", "elec", rideMins);
         entries.push({
           id: "velib_elec_" + st.id,
           name: "Vélib'", stationLabel: t("hist_electric"),
           short: "Vb", color: "#0072b9", tc: "#fff",
           type: "station", subtype: t("hist_electric"),
-          bat: null, unlock: 1, pMin: 0.17, freeMins: 0,
+          bat: null, unlock: 3, pMin: null, freeMins: 45, priceLabel: stationPriceLabel("paris", "elec"),
           price: elecPrice,
           dist: st.dist, real: true,
           mechaDispo: 0, elecDispo: st.elecDispo,
@@ -1991,7 +2033,10 @@ function Compare(props) {
     jcdecaux.stations.concat(fifteen.stations).concat(mecatran.stations).concat(gbfsStations.stations).slice(0, 2).map(function(st) {
       var walkMins = Math.round(st.dist / 80);
       var rideMins = scMins;
-      var price = rideMins > st.city.freeMins ? Math.round((rideMins - st.city.freeMins) * st.city.pMin * 100) / 100 : 0;
+      var stCityId = st.city.cityId;
+      var stCityPriced = stCityId ? calcStationPrice(stCityId, "mec", rideMins) : null;
+      var price = stCityPriced != null ? stCityPriced : (rideMins > st.city.freeMins ? Math.round((rideMins - st.city.freeMins) * st.city.pMin * 100) / 100 : 0);
+      var stPriceLabel = stCityId ? stationPriceLabel(stCityId, "mec") : null;
       return {
         id: "station_" + st.city.name + "_" + st.id,
         name: st.city.service || st.city.name,
@@ -1999,7 +2044,7 @@ function Compare(props) {
         short: "Vb", color: st.city.color, tc: "#fff",
         type: "station",
         subtype: "Mécanique",
-        bat: null, unlock: 0, pMin: st.city.pMin,
+        bat: null, unlock: 0, pMin: st.city.pMin, priceLabel: stPriceLabel,
         price: price,
         dist: st.dist,
         real: true,
@@ -2098,7 +2143,7 @@ function Compare(props) {
         </div>
 
         {props.toAddr && <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-          {[[km.toFixed(1) + " km", "Distance"], [formatDuration(tab === "micro" ? scMins : mins), "Durée"], [trafLabel, "Trafic"]].map(function(item, i) {
+          {[[km.toFixed(1) + " km", "Distance"], [formatDuration(tab === "micro" ? scMins : mins), "Durée"]].concat(km < MAX_URBAN_KM ? [[trafLabel, "Trafic"]] : []).map(function(item, i) {
             return (
               <div key={item[1]} style={{ flex: 1, background: T.input, borderRadius: 8, padding: "7px 8px", textAlign: "center" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: i === 2 ? trafColor : T.text, fontFamily: "'DM Sans',sans-serif" }}>{item[0]}</div>
@@ -2242,8 +2287,8 @@ function Compare(props) {
                         <div style={{ fontSize: 11, color: T.muted, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{m.info}</div>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        {to && <div style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{m.price.toFixed(2)} €</div>}
-                        <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{m.pMin.toFixed(2).replace(".",",")}€/min</div>
+                        {to && m.price != null && <div style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{m.price.toFixed(2)} €</div>}
+                        <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{m.pMin != null ? m.pMin.toFixed(2).replace(".",",") : "—"}€/min</div>
                         <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>sans abonnement</div>
                       </div>
                     </div>
@@ -2360,7 +2405,7 @@ function Compare(props) {
                     {props.toAddr ? (
                       <div style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{s.price.toFixed(2)} €</div>
                     ) : null}
-                    <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.real && s.type === "station" ? (s.freeMins > 0 ? "Gratuit " + s.freeMins + "min · ~" + s.pMin + "€/min ensuite" : s.unlock > 0 ? s.unlock + "€ · " + s.pMin + "€/min" : "Gratuit 45min · ~0,17€/min ensuite") : (s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min")}</div>
+                    <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{s.real && s.type === "station" ? (s.priceLabel || (s.freeMins > 0 ? "Gratuit " + s.freeMins + "min · ~" + s.pMin + "€/min ensuite" : s.unlock > 0 ? s.unlock + "€ · " + s.pMin + "€/min" : "—")) : (s.unlock > 0 ? s.unlock + "€+" + s.pMin + "€/min" : s.pMin + "€/min")}</div>
                   </div>
                 </div>
               );
@@ -2402,7 +2447,7 @@ function Compare(props) {
               combined.sort(function(a, b) { return toutSort === "time" ? a.mins - b.mins : a.price - b.price; });
               var seenKeys = {};
               combined = combined.filter(function(item) {
-                var key = item.catLabel + "_" + item.price.toFixed(2);
+                var key = item.catLabel + "_" + (item.price != null ? item.price.toFixed(2) : "0");
                 if (seenKeys[key]) return false;
                 seenKeys[key] = true;
                 return true;
@@ -2724,7 +2769,7 @@ function MapView(props) {
           inner.textContent = "🚲 " + s.numbikesavailable;
           (function(station) {
             var stDist = distMeters(lat, lng, station.coordonnees_geo.lat, station.coordonnees_geo.lon);
-            inner.onclick = function(e) { e.stopPropagation(); if (selectedStationMarkerRef.current) { selectedStationMarkerRef.current.style.opacity = '1'; selectedStationMarkerRef.current.style.filter = ''; } selectedStationMarkerRef.current = inner; inner.style.opacity = '0.5'; inner.style.filter = 'grayscale(80%)'; setSelectedStation({ name: station.name, dist: stDist, avail: station.numbikesavailable, elec: station.ebike || 0, city: { service: "Vélib'", color: "#0072b9", pMin: 0.17, freeMins: 45 } }); };
+            inner.onclick = function(e) { e.stopPropagation(); if (selectedStationMarkerRef.current) { selectedStationMarkerRef.current.style.opacity = '1'; selectedStationMarkerRef.current.style.filter = ''; } selectedStationMarkerRef.current = inner; inner.style.opacity = '0.5'; inner.style.filter = 'grayscale(80%)'; setSelectedStation({ name: station.name, dist: stDist, avail: station.numbikesavailable, elec: station.ebike || 0, city: { service: "Vélib'", color: "#0072b9", pMin: 0.17, freeMins: 45, cityId: "paris" } }); };
           })(s);
           el.appendChild(inner);
           var velibMarker = new mapboxgl.Marker({ element: el, anchor: "center" })
@@ -3086,8 +3131,9 @@ function MapView(props) {
       } else {
         // Micro-mobilité ou autre : pas de tracé voiture, effacer si existant
         clearWalkingRoute();
-        try { if (mapboxRef.current.getLayer("route")) mapboxRef.current.removeLayer("route"); } catch(e) {}
-        try { if (mapboxRef.current.getSource("route")) mapboxRef.current.removeSource("route"); } catch(e) {}
+        try { if (mapboxRef.current.getLayer("route-bg"))   mapboxRef.current.removeLayer("route-bg");   } catch(e) {}
+        try { if (mapboxRef.current.getLayer("route-line")) mapboxRef.current.removeLayer("route-line"); } catch(e) {}
+        try { if (mapboxRef.current.getSource("route"))     mapboxRef.current.removeSource("route");     } catch(e) {}
       }
     }
     // Repositionner les véhicules autour du nouveau départ
@@ -3103,8 +3149,9 @@ function MapView(props) {
     if (filter !== "rien") clearWalkingRoute();
     // Effacer le tracé voiture si on passe en micro-mobilité
     if (filter === "micro") {
-      try { if (mapboxRef.current.getLayer("route")) mapboxRef.current.removeLayer("route"); } catch(e) {}
-      try { if (mapboxRef.current.getSource("route")) mapboxRef.current.removeSource("route"); } catch(e) {}
+      try { if (mapboxRef.current.getLayer("route-bg"))   mapboxRef.current.removeLayer("route-bg");   } catch(e) {}
+      try { if (mapboxRef.current.getLayer("route-line")) mapboxRef.current.removeLayer("route-line"); } catch(e) {}
+      try { if (mapboxRef.current.getSource("route"))     mapboxRef.current.removeSource("route");     } catch(e) {}
     }
     // Redessiner le tracé piéton si on revient sur "rien" avec une destination
     if (filter === "rien" && toAddrRef.current && fromAddrRef.current) {
@@ -3232,8 +3279,13 @@ function MapView(props) {
               </div>
             </div>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Gratuit {(selectedStation.city && selectedStation.city.freeMins) || 45}min</div>
-              <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{(selectedStation.city && selectedStation.city.pMin) || 0.17}€/min ensuite</div>
+              {selectedStation.city && selectedStation.city.cityId && STATION_PRICING[selectedStation.city.cityId]
+                ? <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>
+                    {stationPriceLabel(selectedStation.city.cityId, "mec")}
+                    {STATION_PRICING[selectedStation.city.cityId].elec ? " · élec: " + stationPriceLabel(selectedStation.city.cityId, "elec") : ""}
+                  </div>
+                : <div style={{ fontSize: 11, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Gratuit {(selectedStation.city && selectedStation.city.freeMins) || 45}min · {(selectedStation.city && selectedStation.city.pMin) || 0.17}€/min ensuite</div>
+              }
             </div>
             <button onClick={function() { setSelectedStation(null); }}
               style={{ background: "none", border: "none", fontSize: 18, color: T.muted, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>×</button>
@@ -3373,7 +3425,7 @@ function MapView(props) {
         )}
         <div style={{ display: "flex", gap: 8, padding: "0 12px 14px", overflowX: "auto", WebkitOverflowScrolling: "touch", scrollSnapType: "x proximity" }}>
           {(filter === "tous" || (filter === "micro" && (!subFilter || subFilter === "station"))) && mapStations.slice(0, 3).map(function(st) {
-            var cityInfo = st.city || { service: "Vélib'", color: "#0072b9", short: "Vb", freeMins: 45 };
+            var cityInfo = st.city || { service: "Vélib'", color: "#0072b9", short: "Vb", freeMins: 45, cityId: "paris" };
             var shortLabel = cityInfo.short || (cityInfo.service ? cityInfo.service.slice(0, 2) : "Vb");
             return (
               <div key={"vb_" + st.id} style={{ flexShrink: 0, width: 110, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "10px 11px" }}>
@@ -3382,7 +3434,7 @@ function MapView(props) {
                 <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif", marginBottom: 2 }}>{st.name.length > 18 ? st.name.slice(0,18)+"…" : st.name}</div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: cityInfo.color || "#0072b9", fontFamily: "'DM Sans',sans-serif" }}>🚲 {st.total} vélos</div>
                 <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>🚶 {st.dist} m</div>
-                <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Gratuit {cityInfo.freeMins}min</div>
+                <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>{cityInfo.cityId && stationPriceLabel(cityInfo.cityId, "mec") ? stationPriceLabel(cityInfo.cityId, "mec") : ("Gratuit " + cityInfo.freeMins + "min")}</div>
               </div>
             );
           })}
@@ -3418,7 +3470,7 @@ function MapView(props) {
             var stationItems = [];
             if (filter === "tous" || filter === "micro") {
               mapStations.forEach(function(st) {
-                var cityObj = st.city || { service: "Vélib'", color: "#0072b9", pMin: 0.17, freeMins: 45 };
+                var cityObj = st.city || { service: "Vélib'", color: "#0072b9", pMin: 0.17, freeMins: 45, cityId: "paris" };
                 var key = cityObj.service || cityObj.name || "station";
                 if (seenOperators["station_" + key]) return;
                 seenOperators["station_" + key] = true;
@@ -3428,7 +3480,7 @@ function MapView(props) {
 
             // Liste statique des villes sans certains types (vérifiée manuellement)
             var NO_SCOOTERS   = ["toulouse", "montpellier", "nantes", "rennes", "reims", "nancy", "clermont"];
-            var NO_FREE_BIKES = ["nantes", "rennes", "reims", "nancy", "clermont"];
+            var NO_FREE_BIKES = ["nantes", "rennes", "reims", "nancy", "clermont", "lyon"];
             var NO_STATIONS   = ["reims"]; // toutes les grandes villes ont des vélos en station — à compléter au cas par cas
             var HAS_MOPEDS    = ["bordeaux", "toulouse", "nice"];
             var detectedCity = detectCity(props.fromAddr ? props.fromAddr.lat : 0, props.fromAddr ? props.fromAddr.lng : 0) || "";
@@ -3481,7 +3533,7 @@ function MapView(props) {
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginTop: 6, fontFamily: "'DM Sans',sans-serif" }}>{city.service || city.name}</div>
                   <div style={{ fontSize: 9, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Vélo en station</div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: T.text, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>Gratuit {city.freeMins}min · {city.pMin}€/min</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.text, marginTop: 2, fontFamily: "'DM Sans',sans-serif" }}>{(city.cityId && stationPriceLabel(city.cityId, "mec")) || ("Gratuit " + city.freeMins + "min · " + city.pMin + "€/min")}</div>
                   <div style={{ fontSize: 10, color: T.muted, marginTop: 3, fontFamily: "'DM Sans',sans-serif" }}>🚶 {st.dist} m</div>
                 </div>
               );

@@ -787,25 +787,25 @@ function AddrInput(props) {
         encodeURIComponent(val) +
         "&access_token=" + MAPBOX_TOKEN +
         "&session_token=" + sessionTokenRef.current +
-        "&language=fr&limit=10&types=address,place,poi" + proximityParam + categoryParam
+        "&language=" + (localStorage.getItem("mobio_lang") || "fr") + "&limit=10&types=address,place,poi" + proximityParam + categoryParam
       )
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (!data.suggestions) { setSuggestions([]); setLoading(false); return; }
+        var RENTAL_KEYWORDS = ["t2","t3","t4","t5","f2","f3","f4","f5","appartement","studio","location ","vente ","duplex","entire place","quiet","cosy","luxury","3bd","2bd","chambre","location saisonnière","apartment","airbnb","booking"];
         var results = data.suggestions.filter(function(s) {
           // Exclure les annonces immobilières et types non pertinents
-          var cat = (s.feature_type || "").toLowerCase();
           var name = (s.name || "").toLowerCase();
-          if (cat === "poi" && (
-            name.indexOf("t2") === 0 || name.indexOf("t3") === 0 || name.indexOf("t4") === 0 ||
-            name.indexOf("f2") === 0 || name.indexOf("f3") === 0 ||
-            name.indexOf("appartement") >= 0 || name.indexOf("studio") === 0 ||
-            name.indexOf("location ") === 0 || name.indexOf("vente ") === 0
-          )) return false;
+          var isRental = RENTAL_KEYWORDS.some(function(kw) {
+            return kw.endsWith(" ") ? name.indexOf(kw) === 0 : name.indexOf(kw) >= 0;
+          });
+          if (isRental) return false;
           return true;
         }).map(function(s) {
+          var cat = s.poi_category && s.poi_category.length > 0 ? s.poi_category[0] : "";
           return {
             label: s.name + (s.place_formatted ? ", " + s.place_formatted : ""),
+            category: cat,
             mapboxId: s.mapbox_id,
             context: s.place_formatted || "",
           };
@@ -940,7 +940,7 @@ function AddrInput(props) {
                 onMouseLeave={function(e) { e.currentTarget.style.background = T.card; }}
               >
                 <span>📍</span>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.label}</span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.label}{s.category ? " · " + s.category : ""}</span>
               </div>
             );
           })}
@@ -1942,7 +1942,7 @@ function Compare(props) {
 
   var surgeInfo = getSurge();
 
-  var vtcList = Object.keys(PLATFORMS).filter(function(id) {
+  var vtcList = km > MAX_URBAN_KM ? [] : Object.keys(PLATFORMS).filter(function(id) {
     var p = PLATFORMS[id];
     // Filtre par ville si la plateforme a une restriction géographique
     if (p.cities && p.cities.indexOf(cityId) < 0) return false;
@@ -1970,7 +1970,7 @@ function Compare(props) {
   // une vraie position a été trouvée via le proxy GBFS. Aucun fallback inventé.
   // Construit tous les véhicules disponibles (1 entrée par véhicule réel, pas juste le plus proche par opérateur)
   var allVehicles = [];
-  Object.keys(SCOOTERS).filter(function(id) { return id !== "velib"; }).forEach(function(id) {
+  if (km <= MAX_URBAN_KM) Object.keys(SCOOTERS).filter(function(id) { return id !== "velib"; }).forEach(function(id) {
     var s = SCOOTERS[id];
     var operatorKey = id.indexOf("lime") === 0 ? "lime" : id.indexOf("dott") === 0 ? "dott" : id.indexOf("bird") === 0 ? "bird" : id.indexOf("voi") === 0 ? "voi" : id.indexOf("pony") === 0 ? "pony" : null;
     var realData = operatorKey ? gbfs.vehicles[operatorKey] : null;
@@ -1980,7 +1980,7 @@ function Compare(props) {
         unlock: s.unlock, pMin: s.pMin, price: calcScPrice(id, scMins), dist: v.dist, real: true,
         operatorKey: operatorKey, rentalUris: v.rentalUris, rangeKm: v.rangeKm });
     });
-  });
+  });  // end if km <= MAX_URBAN_KM
 
   // Règle de sélection : max 2 véhicules par compagnie, 5 au total, triés par distance (les plus proches d'abord)
   allVehicles.sort(function(a, b) { return (a.dist || 0) - (b.dist || 0); });
@@ -3491,9 +3491,7 @@ function MapView(props) {
             if (subFilter === "scooter" && NO_SCOOTERS.indexOf(detectedCity) >= 0) {
               return [<div key="empty-sc" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>{t("no_scooter")}</div>];
             }
-            if (subFilter === "bike" && NO_FREE_BIKES.indexOf(detectedCity) >= 0) {
-              return [<div key="empty-bk" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>{t("no_bike")}</div>];
-            }
+            // Bug #2 : Ne pas faire d'early return pour bike+NO_FREE_BIKES — on affiche le message inline avec les stations
             if (subFilter === "station" && NO_STATIONS.indexOf(detectedCity) >= 0) {
               return [<div key="empty-st" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>{t("no_station")}</div>];
             }
@@ -3510,7 +3508,15 @@ function MapView(props) {
               return [<div key="empty-sf" style={{ padding: "18px 14px", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>Aucun véhicule de ce type détecté dans ce périmètre.</div>];
             }
 
-            return realScooters.map(function(item) {
+            var noFreeBikeMsg = (subFilter === "bike" && NO_FREE_BIKES.indexOf(detectedCity) >= 0)
+              ? [<div key="no-free-bike" style={{ flexShrink: 0, width: 150, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "12px 11px", display: "flex", flexDirection: "column", gap: 4 }}>
+                  <div style={{ fontSize: 20 }}>🚲</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{t("no_bike")}</div>
+                  <div style={{ fontSize: 10, color: T.muted, fontFamily: "'DM Sans',sans-serif" }}>Pas de vélos libres GBFS ici</div>
+                </div>]
+              : [];
+
+            return noFreeBikeMsg.concat(realScooters.map(function(item) {
               var s = item.s, veh = item.veh;
               return (
                 <div key={item.scId + "_" + item.veh.id} style={{ flexShrink: 0, width: 120, background: T.input, border: "1px solid " + T.border, borderRadius: 14, padding: "10px 11px", cursor: "pointer" }}
@@ -3537,7 +3543,7 @@ function MapView(props) {
                   <div style={{ fontSize: 10, color: T.muted, marginTop: 3, fontFamily: "'DM Sans',sans-serif" }}>🚶 {st.dist} m</div>
                 </div>
               );
-            }));
+            })));
           })()}
         </div>
         </>
@@ -3717,7 +3723,20 @@ function Detail(props) {
 function History(props) {
   var T = props.T;
   var t = getT(props.lang || localStorage.getItem("mobio_lang") || "fr");
-  var TRIPS_TRANSLATED = loadTrips().map(function(tr) { return Object.assign({}, tr, { date: tr.date === "__today__" ? t("hist_today") : tr.date === "__yesterday__" ? t("hist_yesterday") : tr.date, eco_label: t("hist_electric"), saved_label: t("hist_saved_badge") }); });
+  var _today0 = new Date(); _today0.setHours(0,0,0,0);
+  var _yest0  = new Date(_today0); _yest0.setDate(_today0.getDate() - 1);
+  var TRIPS_TRANSLATED = loadTrips().map(function(tr) {
+    var dateLabel;
+    if (tr.date === "__today__") dateLabel = t("hist_today");
+    else if (tr.date === "__yesterday__") dateLabel = t("hist_yesterday");
+    else if (typeof tr.date === "number") {
+      var _d = new Date(tr.date);
+      if (_d >= _today0) dateLabel = t("hist_today");
+      else if (_d >= _yest0) dateLabel = t("hist_yesterday");
+      else dateLabel = _d.getDate() + " " + ["jan","fév","mar","avr","mai","juin","juil","aoû","sep","oct","nov","déc"][_d.getMonth()];
+    } else { dateLabel = tr.date; }
+    return Object.assign({}, tr, { dateLabel: dateLabel });
+  });
   var tripStats = getTripStats();
   var maxVal = Math.max.apply(null, MONTHLY.map(function(m) { return m.val; }));
   return (
@@ -3755,28 +3774,29 @@ function History(props) {
         </div>
       </div>
       <div style={{ padding: "8px 12px" }}>
-        {HISTORY_DATA.map(function(h) {
-          var p = h.sc ? SCOOTERS[h.plId] : PLATFORMS[h.plId];
-          return (
-            <div key={h.id} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <Logo short={p.short} color={p.color} tc={p.tc} size={30} />
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{p.name}{h.sc ? " — " + p.type : " — Standard"}</div>
-                  <div style={{ fontSize: 10, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>{h.date} · {h.dur} min</div>
-                </div>
-                <div style={{ marginLeft: "auto", fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{h.price.toFixed(2)} €</div>
-              </div>
-              <div style={{ display: "flex", gap: 5, alignItems: "center", fontSize: 11, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>
-                <span style={{ color: p.color }}>●</span>{h.from}<span style={{ color: T.muted }}>→</span>▲{h.to}
-              </div>
-              <div style={{ marginTop: 7, display: "flex", gap: 5 }}>
-                {h.saved && <span style={{ fontSize: 9, fontWeight: 700, background: "#e1f5ee", color: "#085041", padding: "2px 7px", borderRadius: 4, fontFamily: "'DM Sans',sans-serif" }}>{h.saved.toFixed(2)} € {t("hist_saved_badge")}</span>}
-                {h.eco && <span style={{ fontSize: 9, fontWeight: 700, background: "#e1f5ee", color: "#085041", padding: "2px 7px", borderRadius: 4, fontFamily: "'DM Sans',sans-serif" }}>{t("hist_electric")}</span>}
-              </div>
+        {TRIPS_TRANSLATED.length === 0
+          ? <div style={{ padding: "24px 12px", textAlign: "center", color: T.muted, fontFamily: "'DM Sans',sans-serif", fontSize: 13 }}>
+              {props.lang === "en" ? "No trips recorded yet." : "Aucun trajet enregistré pour l'instant."}
             </div>
-          );
-        })}
+          : TRIPS_TRANSLATED.map(function(h, idx) {
+              var modeIcon = h.mode === "vtc" ? "🚗" : h.mode === "moped" ? "🛵" : "🛴";
+              return (
+                <div key={idx} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: "11px 13px", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 8, background: T.input, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{modeIcon}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif" }}>{h.operator}</div>
+                      <div style={{ fontSize: 10, color: T.sub, fontFamily: "'DM Sans',sans-serif" }}>{h.dateLabel}</div>
+                    </div>
+                    <div style={{ marginLeft: "auto", fontSize: 15, fontWeight: 700, color: T.text, fontFamily: "'DM Sans',sans-serif", flexShrink: 0 }}>{h.price != null ? h.price.toFixed(2) + " €" : "—"}</div>
+                  </div>
+                  <div style={{ marginTop: 5, display: "flex", gap: 5 }}>
+                    {h.saved > 0 && <span style={{ fontSize: 9, fontWeight: 700, background: "#e1f5ee", color: "#085041", padding: "2px 7px", borderRadius: 4, fontFamily: "'DM Sans',sans-serif" }}>{h.saved.toFixed(2)} € {t("hist_saved_badge")}</span>}
+                  </div>
+                </div>
+              );
+            })
+        }
       </div>
       </div>
     </div>

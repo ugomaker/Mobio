@@ -4601,7 +4601,7 @@ function App() {
     supabase.from("favorites").upsert({
       id: fav.id, user_id: session.user.id,
       icon: fav.icon, label: fav.label, addr: fav.addr, lat: fav.lat, lng: fav.lng
-    }, { onConflict: "id,user_id" });
+    }, { onConflict: "id,user_id" }).then(function(r) { if (r.error) console.error("favorites upsert", r.error); });
   }
 
   function saveFav(sel, custom) {
@@ -4619,7 +4619,7 @@ function App() {
 
   function removeFav(id) {
     setFavs(function(prev) { return prev.filter(function(f) { return f.id !== id; }); });
-    if (session) supabase.from("favorites").delete().eq("id", id).eq("user_id", session.user.id);
+    if (session) supabase.from("favorites").delete().eq("id", id).eq("user_id", session.user.id).then(function(r) { if (r.error) console.error("favorites delete", r.error); });
   }
 
   return (

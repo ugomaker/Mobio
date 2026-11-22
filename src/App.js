@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 
@@ -3931,7 +3932,9 @@ function Profile(props) {
   useEffect(function() {
     if (!props.session) return;
     var userId = props.session.user.id;
-    var url = supabase.storage.from("Avatar").getPublicUrl(userId + "/avatar.jpg").data.publicUrl;
+    // Bug #6 : utiliser le chemin réel (stocké à l'upload), pas toujours avatar.jpg
+    var savedPath = localStorage.getItem("mobio_avatar_path") || (userId + "/avatar.jpg");
+    var url = supabase.storage.from("Avatar").getPublicUrl(savedPath).data.publicUrl;
     // Vérifier que le fichier existe vraiment avant d'afficher
     fetch(url, { method: "HEAD" }).then(function(r) {
       if (r.ok) setAvatarUrl(url + "?t=" + Date.now());
@@ -3953,6 +3956,8 @@ function Profile(props) {
       .then(function(result) {
         setAvatarLoading(false);
         if (result.error) { alert("Erreur upload : " + result.error.message); return; }
+        // Mémoriser le chemin réel pour le prochain chargement (Bug #6)
+        try { localStorage.setItem("mobio_avatar_path", path); } catch(e) {}
         // Remplacer l'URL locale par l'URL Supabase permanente
         var url = supabase.storage.from("Avatar").getPublicUrl(path).data.publicUrl;
         setAvatarUrl(url + "?t=" + Date.now());
@@ -4683,3 +4688,4 @@ function App() {
 }
 
 export default App;
+      
